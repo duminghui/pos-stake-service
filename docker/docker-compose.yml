@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+    pos-service:
+        container_name: pos-service
+        build: .
+        volumes:
+            - ../src:/code
+            - ../run-data/wallet-data:/root/.dstra
+        command: tail -f /root/.bashrc
+        depends_on:
+            - pos-mysql
+
+    pos-mysql:
+        container_name: pos-mysql
+        build:
+          context: .
+          dockerfile: Dockerfile-mysql
+        expose:
+            - "3306"
+        ports:
+            - "127.0.0.1:3306:3306"
+        volumes:
+            - ../run-data/db-mysql:/var/lib/mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: posservice

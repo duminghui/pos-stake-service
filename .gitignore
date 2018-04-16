@@ -99,3 +99,11 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+.idea
+.DS_Store
+run-data
+docker/dstrad
+docker/get-pip.py
+docker/miniupnpc-1.9.20140401.tar.gz
+
