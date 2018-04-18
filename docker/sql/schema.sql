@@ -9,18 +9,18 @@ USE posservice;
 GRANT SELECT, INSERT, UPDATE, DELETE ON posservice.* TO ''@'%' IDENTIFIED BY 'posservice';
 
 
-CREATE TABLE walletBalance (
+CREATE TABLE dst_wallet_balance (
   `id`            BIGINT      NOT NULL,
   `balance`       REAL(16,8)  NOT NULL,
   `stake`         REAL(16,8)  NOT NULL,
-  `update_at`     REAL        NOT NULL,
+  `update_at`     BIGINT      NOT NULL,
   `update_at_str` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`id`)
 )
   ENGINE = innodb
   DEFAULT CHARSET = utf8;
 
-CREATE TABLE transactions (
+CREATE TABLE dst_transactions (
   `txid`        VARCHAR(80) NOT NULL,
   `idx`         BIGINT      NOT NULL,
   `category`    VARCHAR(20) NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE transactions (
   `txtime`      BIGINT        NOT NULL,
   `txtime_str`  VARCHAR(50) NOT NULL,
   PRIMARY KEY (`txid`),
-  KEY `idx_txs_txtime` (`txtime`)
+  KEY `idx_dst_transactions_txtime` (`txtime`)
 )
   ENGINE = innodb
   DEFAULT CHARSET = utf8;
@@ -81,5 +81,27 @@ CREATE TABLE dst_in_out_stake (
   ENGINE = innodb
   DEFAULT CHARSET = utf8;
 
-
+CREATE TABLE dst_daily_profit(
+  `id`                VARCHAR(50)   NOT NULL,
+  `userid`            VARCHAR (50)  NOT NULL,
+  `username`          VARCHAR (50)  NOT NULL,
+  `daily_profit`      REAL(16,8)    NOT NULL,
+  `stage_pos_profit`  REAL(16,8)    NOT NULL,
+  `all_pos_profit`    REAL(16,8)    NOT NULL,
+  `injection`         REAL(16,8)    NOT NULL,
+  `start_amount`      REAL(16,8)    NOT NULL,
+  `stake`             REAL(16,15)   NOT NULL,
+  `pos_time`          BIGINT        NOT NULL,
+  `isdailynode`       BOOLEAN       NOT NULL,
+  `dailyflag`         BIGINT        NOT NULL,
+  `dailyflag_str`     VARCHAR(50)   NOT NULL,
+  `profit_time`       BIGINT        NOT NULL,
+  `profit_time_str`   VARCHAR(50)   NOT NULL,
+  UNIQUE KEY `idx_dst_daily_profit_id` (`id`),
+  KEY `idx_dst_daily_profit_time` (`profit_time`),
+  KEY `idx_dst_daily_profit_dailyflag` (`dailyflag`),
+  KEY `idx_dst_daily_profit_pos_time` (`pos_time`)
+)
+  ENGINE = innodb
+  DEFAULT CHARSET = utf8;
 

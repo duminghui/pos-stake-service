@@ -21,6 +21,6 @@ services:
         ports:
             - "127.0.0.1:3306:3306"
         volumes:
-            - ../run-data/db-mysql:/var/lib/mysql
+            - ../run-data/pos-mysql:/var/lib/mysql
         environment:
             MYSQL_ROOT_PASSWORD: posservice

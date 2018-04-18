@@ -20,17 +20,17 @@ if __name__ == '__main__':
     print(next_id())
 
 
-class WalletBalance(Model):
-    __table__ = 'walletBalance'
+class DstWalletBalance(Model):
+    __table__ = 'dst_wallet_balance'
     id = IntegerField(primary_key=True, default=1)
     balance = FloatField()
     stake = FloatField()
-    update_at = FloatField(default=time.time)
-    update_at_str = StringField(ddl='varchar(50)', default=utils.get_gmt_time_str)
+    update_at = IntegerField()
+    update_at_str = StringField(ddl='varchar(50)', default=utils.get_gmt_time_yyyymmddhhmmss)
 
 
-class Transactions(Model):
-    __table__ = 'transactions'
+class DstTransactions(Model):
+    __table__ = 'dst_transactions'
     txid = StringField(primary_key=True, ddl='varchar(50)')
     idx = IntegerField()
     category = StringField(ddl='varchar(20)')
@@ -44,7 +44,7 @@ class Users(Model):
     id = StringField(primary_key=True, ddl='varchar(50)')
     name = StringField(ddl='varchar(50)')
     create_at = FloatField(default=time.time)
-    create_at_time = StringField(ddl='varchar(50)', default=utils.get_gmt_time_str)
+    create_at_time = StringField(ddl='varchar(50)', default=utils.get_gmt_time_yyyymmddhhmmss)
 
 
 class DstInOutStake(Model):
@@ -52,7 +52,7 @@ class DstInOutStake(Model):
     id = StringField(ddl='varchar(50)', primary_key=True, default=next_id)
     txid = StringField(ddl='varchar(80)')
     userid = StringField(ddl='varchar(50)', default=const.POS_NOUSER_ID)
-    username = StringField(ddl='varchar(50)', default='noname')
+    username = StringField(ddl='varchar(50)', default=const.POS_NOUSER_NAME)
     change_amount = FloatField()
     stake = FloatField()
     start_amount = FloatField()
@@ -68,3 +68,22 @@ class DstInOutStake(Model):
     isprocess = BooleanField()
     isonchain = BooleanField()
     comment = StringField(ddl='varchar(200)')
+
+
+class DstDailyProfit(Model):
+    __table__ = 'dst_daily_profit'
+    id = StringField(ddl='varchar(50)', primary_key=True, default=next_id)
+    userid = StringField(ddl='varchar(50)', default=const.POS_NOUSER_ID)
+    username = StringField(ddl='varchar(50)', default=const.POS_NOUSER_NAME)
+    daily_profit = FloatField()
+    stage_pos_profit = FloatField()
+    all_pos_profit = FloatField()
+    start_amount = FloatField()
+    injection = FloatField()
+    stake = FloatField()
+    pos_time = IntegerField()
+    isdailynode = BooleanField()
+    dailyflag = IntegerField()
+    dailyflag_str = StringField(ddl='varchar(50)')
+    profit_time = IntegerField()
+    profit_time_str = StringField(ddl='varchar(50)')

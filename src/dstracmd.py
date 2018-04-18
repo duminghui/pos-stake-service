@@ -33,6 +33,12 @@ def getinfo():
 
 
 def listtransactions(count, frm):
+    """
+    这个命令获取的数据是按时间正序排列的
+    :param count:
+    :param frm:
+    :return:
+    """
     return __cmd("listtransactions airdrop %s %s" % (count, frm))
 
 
