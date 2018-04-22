@@ -1,10 +1,10 @@
-FROM ubuntu
+FROM ubuntu as base
 
 COPY sources.list /etc/apt/sources.list
 COPY get-pip.py /get-pip.py
-COPY dstrad /root/
-#COPY main.py /root/
 COPY miniupnpc-1.9.20140401.tar.gz /
+COPY dstrad /root/
+
 
 VOLUME /root/.dstra
 
@@ -24,6 +24,8 @@ RUN \
  \
  pip install -i http://mirrors.aliyun.com/pypi/simple --trusted-host mirrors.aliyun.com aiomysql apscheduler && \
  \
+ python3 -m pip install -U https://github.com/Rapptz/discord.py/archive/rewrite.zip && \
+ \
  apt-get -y install libboost-all-dev libdb++-dev make && \
  tar -xzvf miniupnpc-1.9.20140401.tar.gz && \
  cd miniupnpc-1.9.20140401 && \
@@ -34,5 +36,15 @@ RUN \
  apt-get -y autoremove && \
  apt-get clean && \
  echo 'alias dst=/root/dstrad' >> /root/.bashrc
+
+
+FROM base as tmp
+
+COPY trawd /root/
+
+VOLUME /root/.traw
+
+RUN \
+     echo 'alias traw=/root/trawd' >> /root/.bashrc
 
 

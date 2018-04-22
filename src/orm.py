@@ -176,6 +176,60 @@ class Model(dict, metaclass=ModelMetaclass):
         return value
 
     @classmethod
+    async def findFields(cls, fields, where=None, args=None, **kw):
+        if isinstance(fields, str):
+            fields = [fields]
+        groupBy = kw.get('groupBy', None)
+        if groupBy:
+            if isinstance(groupBy, str):
+                groupBy = [groupBy]
+            fields.extend(groupBy)
+
+        sql = [
+            'select {} from `{}`'.format(', '.join(fields), cls.__table__)]
+        # print(' '.join(sql))
+        if where:
+            sql.append('where')
+            sql.append(where)
+        if args is None:
+            args = []
+
+        if groupBy:
+            sql.append('group by')
+            sql.append(', '.join(groupBy))
+
+        orderBy = kw.get('orderBy', None)
+        if orderBy:
+            sql.append('order by')
+            sql.append(orderBy)
+        limit = kw.get('limit', None)
+        if limit is not None:
+            sql.append('limit')
+            if isinstance(limit, int):
+                sql.append('?')
+                args.append(limit)
+            elif isinstance(limit, tuple) and len(limit) == 2:
+                sql.append('?, ?')
+                args.extend(limit)
+            else:
+                raise ValueError('Invalid limit value: %s' % str(limit))
+        # print(sql)
+        rs = await select(' '.join(sql), args)
+        # print(rs)
+        if len(rs) == 0:
+            return None
+        # elif len(rs) == 1:
+        #     return cls(**rs[0])
+        else:
+            return [cls(**r) for r in rs]
+        # if len(rs) == 0:
+        #     return None
+        # if len(fields) == 1:
+        #     return [r['_v0_'] for r in rs]
+        # else:
+        #     return [tuple(r.values()) for r in rs]
+
+    @classmethod
     async def findAll(cls, where=None, args=None, **kw):
         ' find objects by where clause. '
         sql = [cls.__select__]

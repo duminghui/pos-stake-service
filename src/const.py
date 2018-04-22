@@ -25,5 +25,16 @@ POS_RECEIVE_2_GENERATE = [
     '7ec64c31b5babb6ba6911d50d8fb36cbf93791afb49e9164ea207578adbcea0e'
 ]
 
-POS_NOUSER_ID = 'nouserid'
+POS_NOUSER_ID = '000000000000000000'
 POS_NOUSER_NAME = 'nousename'
+
+POS_NO_CONFLICTED_CONFIRMATIONS = 20
+
+# PAGE_UP_EMOJI = '\N{Up-Pointing Red Triangle}'
+PAGE_DOWN_EMOJI = '\N{Black Left-Pointing Triangle}'
+# PAGE_DOWN_EMOJI = '\N{Down-Pointing Red Triangle}'
+PAGE_UP_EMOJI = '\N{Black Right-Pointing Triangle}'
+
+PAGE_LOCK_EMOJI = '\N{Lock}'
+
+PAGE_ITEM_COUNT = 5

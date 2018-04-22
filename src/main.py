@@ -16,6 +16,7 @@ from models import *
 import dstra_scan_service
 from apscheduler.triggers.interval import IntervalTrigger, datetime
 import datetime as dt
+import dstuserdata
 
 
 async def init_user():
@@ -33,8 +34,14 @@ async def init(loop):
     await orm.create_pool(loop=loop, **configs.db)
     scheduler = AsyncIOScheduler()
     scheduler.start()
-    # await  init_user()
     await dstra_scan_service.start_scan(scheduler)
+    # dailies = await DstDailyProfit.findFields(['sum(all_pos_profit) as all_pos_profit', 'sum(injection) as injection'],
+    #                                           'isdailynode=?', [1], groupBy=['profit_time_str', 'profit_time'],
+    #                                           orderBy='profit_time desc')
+    # for daily in dailies:
+    #     print(daily.__getattr__('all_pos_profit'))
+    # print(await dstuserdata.all_profit_count())
+    # await  init_user()
     # sched.add_job(my_job, 'interval', seconds=5, coalesce=True)
     # tigger = IntervalTrigger(start_date=datetime.now() + dt.timedelta(seconds=5), seconds=20)
     # sched.add_job(my_job2, tigger, coalesce=True)

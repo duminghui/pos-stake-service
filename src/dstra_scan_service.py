@@ -147,29 +147,28 @@ async def __claim_tx():
     # dumh 2.00000000
     await DstInOutStake.updateByWhere('txid=?', ['4679e8a31331144ebd3bf50e80453a741eaf5c560571e103790a4b6d4488526f'],
                                       userid='404504209241669642', username='dumh')
-
-
-# 当前链上的时间
-now_time_fix_offset = 0
+    # dumh 10.00000000
+    await DstInOutStake.updateByWhere('txid=?', ['1210c38c31b53dd6923ffe35b9a7ab9ce40cee83564d3ac5568b9771e0202fd6'],
+                                      userid='404504209241669642', username='dumh')
 
 
 async def __scan_balance_job():
     get_info = dstracmd.getinfo()
-    global now_time_fix_offset
-    now_time_fix_offset = int(time.time()) + get_info.timeoffset
+    # now_time_fix_offset = int(time.time()) + get_info.timeoffset
+    block_last_time = dstracmd.getbestblock().time
     walletBalance = await DstWalletBalance.find(1)
     if walletBalance is None:
         walletBalance = DstWalletBalance(id=1, balance=get_info.balance, stake=get_info.stake,
-                                         update_at=now_time_fix_offset,
-                                         update_at_st=get_gmt_time_yyyymmddhhmmss(now_time_fix_offset))
+                                         update_at=block_last_time,
+                                         update_at_st=get_gmt_time_yyyymmddhhmmss(block_last_time))
         await walletBalance.save()
     else:
         # logging.info("before: WalletBalance:%s[%s]" % (
         #     walletBalance, time.strftime("%y-%m-%d %H:%M:%S", time.localtime(walletBalance.created_at))))
         walletBalance.balance = get_info.balance
         walletBalance.stake = get_info.stake
-        walletBalance.update_at = now_time_fix_offset
-        walletBalance.update_at_str = get_gmt_time_yyyymmddhhmmss(now_time_fix_offset)
+        walletBalance.update_at = block_last_time
+        walletBalance.update_at_str = get_gmt_time_yyyymmddhhmmss(block_last_time)
         await walletBalance.update()
         # logging.info("after: WalletBalance:%s[%s]" % (
         #     walletBalance, time.strftime("%y-%m-%d %H:%M:%S", time.localtime(walletBalance.created_at))))
@@ -244,7 +243,7 @@ def __get_index_count_by_txid(txid=''):
 
 async def __process_immature_transactions():
     """
-    删除数据库中所有冲突的交易
+    修正数据中immature状态的tx交易
     :return:
     """
     # await DstInOutStake.updateByWhere('`pos_time`>=? and isonchain=?',
@@ -260,10 +259,11 @@ async def __process_immature_transactions():
             if len(tx_in_black.details) == 0:
                 await t.remove()
                 changedTx.append(t)
-            elif tx_in_black.confirmations > 10:
+            elif tx_in_black.confirmations > const.POS_NO_CONFLICTED_CONFIRMATIONS:
                 t.category = 'generate'
                 await t.update()
-                changedTx.append(t)
+                # 因为之前的处理逻辑中immature的数据是已经含包在, 所以只要更新可以了.
+                # changedTx.append(t)
         # 如果有更改就重置这个时间后的股份信息, 并删除每天收益表里的数据
         if len(changedTx):
             min_tx = min(changedTx, key=lambda tx: tx.txtime)
@@ -307,7 +307,7 @@ async def __scan_transactions_job():
     while not final:
         print("last_process_txid:%s" % last_process_txid)
         start_index, count = __get_index_count_by_txid(last_process_txid)
-        print('start_index', start_index, 'count', count)
+        print('#1', 'start_index', start_index, 'count', count)
         if count == 0 or start_index == 0:
             return
         if start_index == -1:
@@ -323,7 +323,7 @@ async def __scan_transactions_job():
             final = True
         #
         txs = dstracmd.listtransactions(step, start_index)
-        print("step", step, "start_index", start_index, "len(txs)", len(txs), 'count', count)
+        print('#2', 'step', step, 'start_index', start_index, 'len(txs)', len(txs), 'count', count)
         txs_count = len(txs)
         if txs_count > 6:
             tmp_t = txs[0]
@@ -365,7 +365,8 @@ async def __scan_transactions_job():
                                         txtime_str=get_gmt_time_yyyymmddhhmmss(txtime),
                                         pos_time=pos_time,
                                         pos_time_str=get_gmt_time_yyyymmddhhmmss(pos_time),
-                                        isprocess=False, isonchain=True, comment='add coin').save()
+                                        isprocess=False, isonchain=True,
+                                        change_username='', comment='add coin').save()
                     # await dstinout.save()
                     await DstTransactions(txid=t.txid, idx=idx, category=t.category, amount=t.amount,
                                           txtime=t.time,
@@ -375,11 +376,25 @@ async def __scan_transactions_job():
                 tx_db = DstTransactions(txid=t.txid, idx=idx, category=t.category, amount=t.amount, txtime=t.time,
                                         txtime_str=get_gmt_time_yyyymmddhhmmss(t.time))
                 if t.category == 'generate' or t.category == 'immature':
-                    if t.confirmations > 10:
+                    if t.confirmations > const.POS_NO_CONFLICTED_CONFIRMATIONS:
                         tx_db.category = 'generate'
                     await tx_db.save()
                 elif t.category == 'receive' and last_process_txid != t.txid:
-                    if t.txid == txs[process_count].txid:
+                    if process_count == txs_count:
+                        # 这种情况只会出现在最新页里
+                        txtime = t.time
+                        if t.txid in const.POS_EFFECTIVE_AT_ONCE_TXID:
+                            pos_time = txtime
+                        else:
+                            pos_time = txtime + const.POS_EFFECTIVE_TIME
+                        await DstInOutStake(change_amount=t.amount, txid=t.txid,
+                                            txtime=txtime,
+                                            txtime_str=get_gmt_time_yyyymmddhhmmss(txtime),
+                                            pos_time=pos_time,
+                                            pos_time_str=get_gmt_time_yyyymmddhhmmss(pos_time),
+                                            isprocess=False, isonchain=True, change_username='',
+                                            comment='add coin').save()
+                    elif t.txid == txs[process_count].txid:
                         tx_detail = dstracmd.gettransaction(t.txid)
                         tx_db.category = 'sendtoself'
                         tx_db.amount = tx_detail.fee
@@ -397,11 +412,14 @@ async def __scan_transactions_job():
                                                 txtime_str=get_gmt_time_yyyymmddhhmmss(txtime),
                                                 pos_time=pos_time,
                                                 pos_time_str=get_gmt_time_yyyymmddhhmmss(pos_time),
-                                                isprocess=False, isonchain=True, comment='add coin').save()
+                                                isprocess=False, isonchain=True, change_username='',
+                                                comment='add coin').save()
                             # await dstinout.save()
                     await tx_db.save()
 
                 last_process_txid = t.txid
+
+                #  中间轮不处理最后一条,最后一条只是用来做判断.
                 if not final and process_count == step_process_count:
                     break
         # break
@@ -415,7 +433,9 @@ async def __total_stakes_job():
         股份计算job
     :return:
     '''
-    global now_time_fix_offset
+    # get_info = dstracmd.getinfo()
+    # now_time_fix_offset = int(time.time()) + get_info.timeoffset
+    block_last_time = dstracmd.getbestblock().time
     dst_in_out_stake_tx = await DstInOutStake.findAll('`isprocess`=? and `isonchain`=?', [0, 1], orderBy='pos_time')
     if len(dst_in_out_stake_tx) <= 0:
         return
@@ -425,9 +445,9 @@ async def __total_stakes_job():
     for k, v in dst_in_out_tx_group:
         min_tx = min(v, key=lambda x: x.pos_time)
         min_tx_pos_time = min_tx.pos_time
-        # 检查需要处理的最小的记录之前有没有已经处理的数据, 如果有,将数据重置
+        # 检查需要处理的最小的记录有没有已经处理的数据, 如果有,将数据重置
         had_processed_count = await DstInOutStake.findNumber('count(`id`)',
-                                                             '`pos_time` > ? and `isprocess`=?',
+                                                             '`pos_time` >= ? and `isprocess`=?',
                                                              [min_tx_pos_time, 1])
         # had_processed_tx = await DstInOutStake.findAll(
         #     '`pos_time` > ? and `isprocess`=? and `isonchain`=?', [min_tx_pos_time, 1, 1], limit=1)
@@ -444,10 +464,7 @@ async def __total_stakes_job():
             # 删除每天结算报表中包括本条之前的数据
             await DstDailyProfit.deleteByWhere('`pos_time`>=?', [min_tx_pos_time])
 
-    # last_process_txid = await Transactions.findAll(orderBy="txtime DESC", limit=1)
-    # now_time = last_process_txid[0].txtime
-    # TODO 不可以使用上面的, 有一种情况是长时间没有收到PoS,时间不会改变,股份计算不出, 考虑使用获取区块中最好的块的时间来处理,等再优化
-    now_time = now_time_fix_offset
+    now_time = block_last_time
     # now_time = 1523254655
     # 获取待处理的记录 不根据isprocess来获取,是因为如果一条交易记录在链的中间获取,之后的分配将计算不了.
     # 即只要链的中间有没有处理过的, 从这个记录开始之后的除了已经认领的, 其他的都要重新计算, 包括nouseid
@@ -472,14 +489,13 @@ async def __total_stakes_job():
         pos_time = tx.pos_time
 
         current_tx_userid = tx.userid
+        current_tx_username = tx.username
         change_amount = Decimal(str(tx.change_amount))
         # 获取处理时的钱包总额, 要包含这个时间之前的钱包数量, 因为这是根据成熟时间来算的, 这个成熟时间在交易链上可能不存在.
-        wallet_balance = await DstTransactions.findNumber('sum(`amount`)', '`txtime`<=? and `category` != ?',
-                                                          [pos_time, 'immature'])
-        # dst_balance2 = (await Transactions.findNumber('sum(`amount`)', '`txtime`<? and `category` != ?',
-        #                                               [pos_time, 'immature']) or 0)
+        wallet_balance = await DstTransactions.findNumber('sum(`amount`)', '`txtime`<=?',
+                                                          [pos_time])
         wallet_balance = Decimal(str(wallet_balance))
-        # 获取本次时间段之间未成熟的币的总额
+        # 获取本次时间段之间不能参与占比分配的币的总量
         immature_amount = (await DstInOutStake.findNumber('sum(`change_amount`)',
                                                           '`txtime`< ? and `pos_time`> ? and isonchain = ?',
                                                           [pos_time, pos_time, 1]) or 0)
@@ -517,11 +533,17 @@ async def __total_stakes_job():
         for user in wait_process_users:
             wait_process_users_1.remove(user)
 
-        random_index = random.randint(0, len(wait_process_users_1) - 1)
-        fix_user = wait_process_users_1[random_index]
-        wait_process_users_1.remove(fix_user)
-        wait_process_users_1.append(fix_user)
-        wait_process_users.extend(wait_process_users_1)
+        if len(wait_process_users_1) == 0:
+            random_index = random.randint(0, len(wait_process_users) - 1)
+            fix_user = wait_process_users[random_index]
+            wait_process_users.pop(random_index)
+            wait_process_users.append(fix_user)
+        else:
+            random_index = random.randint(0, len(wait_process_users_1) - 1)
+            fix_user = wait_process_users_1[random_index]
+            wait_process_users_1.pop(random_index)
+            wait_process_users_1.append(fix_user)
+            wait_process_users.extend(wait_process_users_1)
         user_index = 0
         user_count = len(wait_process_users)
         processed_sum_stake = Decimal(0).__round__(const.PREC_STAKE)
@@ -615,7 +637,7 @@ async def __total_stakes_job():
                                                start_balance=mature_balance, stage_pos_profit=stage_pos_profit,
                                                txtime=pos_time, txtime_str=pos_time_str, pos_time=pos_time,
                                                pos_time_str=pos_time_str, isprocess=1, isonchain=0,
-                                               comment=comment)
+                                               change_username=current_tx_username, comment=comment)
                 await now_stake_info.save()
 
         # if pos_time == 1523256402:
@@ -631,7 +653,9 @@ async def __daily_pos_profit_job():
     :return:
     """
     # 本次任务计算结束的总时间:
-    global now_time_fix_offset
+    # get_info = dstracmd.getinfo()
+    # now_time_fix_offset = int(time.time()) + get_info.timeoffset
+    block_last_time = dstracmd.getbestblock().time
     # 确定本次计算开始的时间, 这个时间有两种情况, 当天有股份重新分配, 从新股份之后的时间算起(不包括新股份启用时间)
     # 如果没有新股份,从零点开始算起, 包括零点的时间
 
@@ -659,23 +683,30 @@ async def __daily_pos_profit_job():
         # 2018-4-18 23:59:59 + 1 秒
         step_end_time = get_timestamp_daily_last_second(daily_profit_start_time) + 1
         # 如果这个时间比本次任务计算结束总时间大的话, 就设为本次任务计算结束的总时间
-        if step_end_time > now_time_fix_offset:
-            step_end_time = now_time_fix_offset + 1
+        if step_end_time > block_last_time:
+            step_end_time = block_last_time + 1
         # 再根据 step_end_time 查看从开始时间到结束时间之内有没有股权变更的记录
+
         dst_in_out_stakes = await DstInOutStake.findAll('`pos_time`<? and `pos_time`>=?',
                                                         [step_end_time, daily_profit_start_time],
                                                         orderBy='pos_time', limit=1)
-        # 如果期间有股权变更, 结束时间为股权变更的时间.空上不包括在搜索内的.
+        # 如果期间有股权变更, 结束时间为股权变更的时间.不包括在搜索内的.
         if len(dst_in_out_stakes):
             step_end_time = dst_in_out_stakes[0].pos_time + 1
+
+        print("#######:start_time(包含),end_time(不包含)", get_gmt_time_yyyymmddhhmmss(daily_profit_start_time),
+              get_gmt_time_yyyymmddhhmmss(step_end_time))
 
         # 计算当前时间段的总收益
         step_pos_profit = (await DstTransactions.findNumber('sum(`amount`)',
                                                             'txtime>=? and txtime <? and (category=? or category=? or category=?)',
                                                             [daily_profit_start_time, step_end_time, 'generate',
                                                              'sendtoself', 'immature']) or 0)
-        print("#####:", get_gmt_time_yyyymmddhhmmss(now_time_fix_offset), step_pos_profit)
+        print("##### step_pos_profit:", get_gmt_time_yyyymmddhhmmss(block_last_time), step_pos_profit)
         step_pos_profit = Decimal(str(step_pos_profit))
+
+        # 获取当前处理时间段最老的未成熟币的tx时间
+        oldest_immature_tx = await DstTransactions.findAll()
 
         # 取出统计时间前的最近的股份分配的pos_time
         lately_stake = await DstInOutStake.findAll('`pos_time`<?', [daily_profit_start_time],
@@ -692,10 +723,6 @@ async def __daily_pos_profit_job():
         wait_process_users = await DstInOutStake.findAll('`pos_time`=?', [lately_stake_post_time])
         for user in wait_process_users:
             userid = user.userid
-            if dailyflag == step_end_time - 1:
-                isdailynode = True
-            else:
-                isdailynode = False
 
             user_stake = Decimal(str(user.stake))
             # 用户当前时间间隔的收益
@@ -703,35 +730,57 @@ async def __daily_pos_profit_job():
             # 用户该阶段收益
             user_stage_pos_profit = (stage_pos_profit * user_stake).__round__(8)
 
-            # 用户当天已经存在的最新的
-            user_daily_profit_last = await DstDailyProfit.findAll('dailyflag=? and userid=?', [dailyflag, userid],
-                                                                  orderBy='profit_time desc', limit=1)
-            if len(user_daily_profit_last):
-                user_daily_profit_last = Decimal(str(user_daily_profit_last[0].daily_profit))
-            else:
-                user_daily_profit_last = Decimal(0)
+            # 用户最后的记录
+            user_daily_profit_last_item = await DstDailyProfit.findAll('userid=?', [userid],
+                                                                       orderBy='profit_time desc',
+                                                                       limit=1)
 
-            # user_daily_profit_exist = Decimal(str(user_daily_profit_exist))
-            # 用户已经存在最后的总收益
-            user_all_pos_profit_last = await DstDailyProfit.findAll('userid=?', [userid], orderBy='profit_time desc',
-                                                                    limit=1)
-            if len(user_all_pos_profit_last):
-                user_all_pos_profit_last = Decimal(str(user_all_pos_profit_last[0].all_pos_profit))
+            user_daily_profit_last_item_len = len(user_daily_profit_last_item)
+            if len(user_daily_profit_last_item):
+                user_daily_profit_last_item = user_daily_profit_last_item[0]
+                user_all_pos_profit_last = Decimal(str(user_daily_profit_last_item.all_pos_profit))
+                if user_daily_profit_last_item.dailyflag == dailyflag:
+                    user_daily_profit_last = Decimal(str(user_daily_profit_last_item.daily_profit))
+                else:
+                    user_daily_profit_last = Decimal(0)
             else:
                 user_all_pos_profit_last = Decimal(0)
+                user_daily_profit_last = Decimal(0)
 
-            # user_all_pos_profit_exist = (
-            #         await  DstDailyProfit.findNumber('sum(`all_pos_profit`)', 'userid=?', [userid]) or 0)
-            # user_all_pos_profit_exist = Decimal(str(user_all_pos_profit_exist))
-            # 获取户该阶段在profit表中的记录
-            user_daily_profit_item = await DstDailyProfit.findAll('pos_time=? and dailyflag=? and userid=?',
-                                                                  [user.pos_time, dailyflag, userid])
+            # # 用户当天已经存在的最新的记录
+            # user_daily_profit_last_item = await DstDailyProfit.findAll('dailyflag=? and userid=?', [dailyflag, userid],
+            #                                                            orderBy='profit_time desc', limit=1)
+            # user_daily_profit_last_len = len(user_daily_profit_last_item)
+            # if user_daily_profit_last_len:
+            #     user_daily_profit_last = Decimal(str(user_daily_profit_last_item[0].daily_profit))
+            # else:
+            #     user_daily_profit_last = Decimal(0)
+
+            # # user_daily_profit_exist = Decimal(str(user_daily_profit_exist))
+            # # 用户已经存在最后的记录
+            # user_all_pos_profit_last_time = await DstDailyProfit.findAll('userid=?', [userid],
+            #                                                              orderBy='profit_time desc',
+            #                                                              limit=1)
+            # if len(user_all_pos_profit_last):
+            #     user_all_pos_profit_last = Decimal(str(user_all_pos_profit_last[0].all_pos_profit))
+            # else:
+            #     user_all_pos_profit_last = Decimal(0)
+
+            # 获取户该阶段在profit表中的记录,根据pos_time来区分
+            # user_daily_profit_item = await DstDailyProfit.findAll('pos_time=? and dailyflag=? and userid=?',
+            #                                                       [user.pos_time, dailyflag, userid])
             # 用户当天收益
             user_daily_profit = (user_daily_profit_last + user_step_pos_profit).__round__(8)
             # 用户总收益
             user_all_pos_profit = (user_all_pos_profit_last + user_step_pos_profit).__round__(8)
 
-            if len(user_daily_profit_item) == 0:
+            # if len(user_daily_profit_item) == 0:
+            if user_daily_profit_last_item_len == 0 or user_daily_profit_last_item.pos_time != user.pos_time or user_daily_profit_last_item.dailyflag != dailyflag:
+
+                # 如果已经存在分配记录,把前一条分配记录的isdailynode设为false
+                if user_daily_profit_last_item_len and user_daily_profit_last_item.dailyflag == dailyflag:
+                    user_daily_profit_last_item.isdailynode = False
+                    await user_daily_profit_last_item.update()
 
                 # 用户注入的资金
                 user_injection = await DstInOutStake.findNumber('sum(`change_amount`)',
@@ -745,7 +794,7 @@ async def __daily_pos_profit_job():
                                                         all_pos_profit=user_all_pos_profit,
                                                         injection=user_injection,
                                                         start_amount=user.start_amount, stake=user.stake,
-                                                        pos_time=lately_stake_post_time, isdailynode=isdailynode,
+                                                        pos_time=user.pos_time, isdailynode=True,
                                                         dailyflag=dailyflag,
                                                         dailyflag_str=get_gmt_time_yyyymmddhhmmss(dailyflag),
                                                         profit_time=step_end_time - 1,
@@ -755,22 +804,21 @@ async def __daily_pos_profit_job():
                 # print('add', user_daily_profit_item)
                 pass
             else:
-                user_daily_profit_item = user_daily_profit_item[0]
                 # user_daily_profit = (user_daily_profit_last + user_step_pos_profit).__round__(8)
                 # user_all_pos_profit = (user_all_pos_profit_last + user_step_pos_profit).__round__(8)
-                user_daily_profit_item.daily_profit = user_daily_profit
-                user_daily_profit_item.stage_pos_profit = user_stage_pos_profit
-                user_daily_profit_item.all_pos_profit = user_all_pos_profit
-                user_daily_profit_item.isdailynode = isdailynode
-                user_daily_profit_item.profit_time = step_end_time - 1
-                user_daily_profit_item.profit_time_str = get_gmt_time_yyyymmddhhmmss(step_end_time - 1)
-                await user_daily_profit_item.update()
+                user_daily_profit_last_item.daily_profit = user_daily_profit
+                user_daily_profit_last_item.stage_pos_profit = user_stage_pos_profit
+                user_daily_profit_last_item.all_pos_profit = user_all_pos_profit
+                user_daily_profit_last_item.isdailynode = True
+                user_daily_profit_last_item.profit_time = step_end_time - 1
+                user_daily_profit_last_item.profit_time_str = get_gmt_time_yyyymmddhhmmss(step_end_time - 1)
+                await user_daily_profit_last_item.update()
                 # print('update', user_daily_profit_item)
                 pass
             pass
         daily_profit_start_time = step_end_time - 1
         # print(now_time_fix_offset, daily_profit_start_time)
-        if now_time_fix_offset == daily_profit_start_time:
+        if block_last_time == daily_profit_start_time:
             break
         # print("#### count", count)
         # count += 1

@@ -44,3 +44,15 @@ def listtransactions(count, frm):
 
 def gettransaction(txid):
     return __cmd("gettransaction %s" % txid)
+
+
+def getbestblockhash():
+    cmd_result = ''
+    cmdStr = "/root/dstrad getbestblockhash"
+    # logging.info("cmd:%s" % cmdStr)
+    cmd_result_cxt = Popen(cmdStr, stdout=PIPE, shell=True).stdout.read().decode("utf-8")
+    return cmd_result_cxt
+
+
+def getbestblock():
+    return __cmd("getblock {}".format(getbestblockhash()))

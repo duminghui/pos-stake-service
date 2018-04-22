@@ -37,21 +37,21 @@ CREATE TABLE dst_transactions (
 CREATE TABLE users (
   `id`              VARCHAR(50)   NOT NULL,
   `name`            VARCHAR(50)   NOT NULL,
-  `created_at`      REAL          NOT NULL,
-  `created_at_time` VARCHAR(50)   NOT NULL,
+  `create_at`      REAL          NOT NULL,
+  `create_at_time` VARCHAR(50)   NOT NULL,
   PRIMARY KEY (`id`)
 )
   ENGINE = innodb
   DEFAULT CHARSET = utf8;
 
-INSERT INTO `users` (`id`,`name`,`created_at`,`created_at_time`) VALUES ('404504209241669642','dumh',0,'1970-1-1 00:00:00');
-INSERT INTO `users` (`id`,`name`,`created_at`,`created_at_time`) VALUES ('402631387577974797','stevenwong2017',0,'1970-1-1 00:00:00');
-INSERT INTO `users` (`id`,`name`,`created_at`,`created_at_time`) VALUES ('401916285929127947','Parker Lee',0,'1970-1-1 00:00:00');
-INSERT INTO `users` (`id`,`name`,`created_at`,`created_at_time`) VALUES ('396837819550662668','mako jr',0,'1970-1-1 00:00:00');
-INSERT INTO `users` (`id`,`name`,`created_at`,`created_at_time`) VALUES ('411932460344016896','cat lmao',0,'1970-1-1 00:00:00');
-INSERT INTO `users` (`id`,`name`,`created_at`,`created_at_time`) VALUES ('407552893806182411','lucky168',0,'1970-1-1 00:00:00');
-INSERT INTO `users` (`id`,`name`,`created_at`,`created_at_time`) VALUES ('403478549379678211','baobao',0,'1970-1-1 00:00:00');
-INSERT INTO `users` (`id`,`name`,`created_at`,`created_at_time`) VALUES ('403341228176965633','JWKY',0,'1970-1-1 00:00:00');
+INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('404504209241669642','dumh',0,'1970-1-1 00:00:00');
+INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('402631387577974797','stevenwong2017',0,'1970-1-1 00:00:00');
+INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('401916285929127947','Parker Lee',0,'1970-1-1 00:00:00');
+INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('396837819550662668','mako jr',0,'1970-1-1 00:00:00');
+INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('411932460344016896','cat lmao',0,'1970-1-1 00:00:00');
+INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('407552893806182411','lucky168',0,'1970-1-1 00:00:00');
+INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('403478549379678211','baobao',0,'1970-1-1 00:00:00');
+INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('403341228176965633','JWKY',0,'1970-1-1 00:00:00');
 
 CREATE TABLE dst_in_out_stake (
   `id`                  VARCHAR(50)   NOT NULL,
@@ -72,6 +72,7 @@ CREATE TABLE dst_in_out_stake (
   `pos_time_str`        VARCHAR(50)   NOT NULL,
   `isprocess`           BOOLEAN       NOT NULL,
   `isonchain`           BOOLEAN       NOT NULL,
+  `change_username`     VARCHAR(50)   NOT NULL,
   `comment`             VARCHAR(200),
   UNIQUE KEY `idx_dst_in_out_stake_txid` (`txid`),
   PRIMARY KEY (`id`),

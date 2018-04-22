@@ -67,6 +67,7 @@ class DstInOutStake(Model):
     pos_time_str = StringField(ddl='varchar(50)')
     isprocess = BooleanField()
     isonchain = BooleanField()
+    change_username = StringField(ddl='varchar(50)')
     comment = StringField(ddl='varchar(200)')
 
 

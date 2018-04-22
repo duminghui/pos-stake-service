@@ -1,12 +1,15 @@
-version: '3'
+version: '3.6'
 
 services:
     pos-service:
         container_name: pos-service
-        build: .
+        build:
+            context: .
+            target: tmp
         volumes:
             - ../src:/code
-            - ../run-data/wallet-data:/root/.dstra
+            - ../run-data/wallet-data-dst:/root/.dstra
+            - ../run-data/wallet-data-traw:/root/.traw
         command: tail -f /root/.bashrc
         depends_on:
             - pos-mysql

@@ -104,6 +104,7 @@ ENV/
 .DS_Store
 run-data
 docker/dstrad
+docker/trawd
 docker/get-pip.py
 docker/miniupnpc-1.9.20140401.tar.gz
 
