@@ -6,7 +6,7 @@ CREATE DATABASE posservice;
 
 USE posservice;
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON posservice.* TO ''@'%' IDENTIFIED BY 'posservice';
+GRANT SELECT, INSERT, UPDATE, DELETE ON posservice.* TO 'posservice'@'%' IDENTIFIED BY 'posservice';
 
 
 CREATE TABLE dst_wallet_balance (

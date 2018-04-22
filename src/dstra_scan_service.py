@@ -259,11 +259,15 @@ async def __process_immature_transactions():
             if len(tx_in_black.details) == 0:
                 await t.remove()
                 changedTx.append(t)
-            elif tx_in_black.confirmations > const.POS_NO_CONFLICTED_CONFIRMATIONS:
+            elif tx_in_black.details[0].category == 'generate':
                 t.category = 'generate'
                 await t.update()
-                # 因为之前的处理逻辑中immature的数据是已经含包在, 所以只要更新可以了.
-                # changedTx.append(t)
+            #
+            # elif tx_in_black.confirmations > const.POS_NO_CONFLICTED_CONFIRMATIONS:
+            #     t.category = 'generate'
+            #     await t.update()
+            # 因为之前的处理逻辑中immature的数据是已经含包在, 所以只要更新可以了.
+            # changedTx.append(t)
         # 如果有更改就重置这个时间后的股份信息, 并删除每天收益表里的数据
         if len(changedTx):
             min_tx = min(changedTx, key=lambda tx: tx.txtime)
@@ -376,8 +380,8 @@ async def __scan_transactions_job():
                 tx_db = DstTransactions(txid=t.txid, idx=idx, category=t.category, amount=t.amount, txtime=t.time,
                                         txtime_str=get_gmt_time_yyyymmddhhmmss(t.time))
                 if t.category == 'generate' or t.category == 'immature':
-                    if t.confirmations > const.POS_NO_CONFLICTED_CONFIRMATIONS:
-                        tx_db.category = 'generate'
+                    # if t.confirmations > const.POS_NO_CONFLICTED_CONFIRMATIONS:
+                    #     tx_db.category = 'generate'
                     await tx_db.save()
                 elif t.category == 'receive' and last_process_txid != t.txid:
                     if process_count == txs_count:

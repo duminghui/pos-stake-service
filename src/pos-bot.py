@@ -214,7 +214,7 @@ async def profile(ctx, user=None):
         pos_rewards = _daily_profit[0].daily_profit
         all_pos_rewards = _daily_profit[0].all_pos_profit
         injection = _daily_profit[0].injection
-        balance = all_pos_rewards + injection
+        balance = (all_pos_rewards + injection).__round__(const.PREC_BALANCE)
         timestamp = _daily_profit[0].profit_time
         in_out_txs = await dstuserdata.get_user_in_out_tx(_userid)
 
