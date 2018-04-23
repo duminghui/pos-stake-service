@@ -259,7 +259,7 @@ async def __process_immature_transactions():
             if len(tx_in_black.details) == 0:
                 await t.remove()
                 changedTx.append(t)
-            elif tx_in_black.details[0].category == 'generate':
+            elif tx_in_black.details[0]['category'] == 'generate':
                 t.category = 'generate'
                 await t.update()
             #
