@@ -95,6 +95,14 @@ async def get_user_immature_amount(userid):
     return _immature_amount
 
 
+async def user_first_stake(userid):
+    _join_time = await DstInOutStake.findAll('userid=? and isonchain=?', [userid, 1], orderBy='txtime', limit=1)
+    if len(_join_time) > 0:
+        return _join_time[0]
+    else:
+        return None
+
+
 async def user_dailies(userid, limit=0, step=5):
     """
     个人每天收益

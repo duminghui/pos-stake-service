@@ -212,13 +212,14 @@ async def profile(ctx, user=None):
     _daily_profit = await dstuserdata.user_dailies(_userid, 0, 1)
     if len(_daily_profit) == 0:
         stake = 0
-        stake_time = utils.get_gmt_time_yyyymmddhhmmss(time.time())
+        stake_time = ''
         pos_rewards = 0
         all_pos_rewards = 0
         injection = 0
         immature = 0
         balance = 0
         timestamp = time.time()
+        join_time = ''
         in_out_txs = []
     else:
         stake = _daily_profit[0].stake
@@ -229,6 +230,7 @@ async def profile(ctx, user=None):
         injection = (Decimal(str(_daily_profit[0].injection)) + immature).__round__(const.PREC_BALANCE)
         balance = (all_pos_rewards + injection).__round__(const.PREC_BALANCE)
         timestamp = _daily_profit[0].profit_time
+        join_time = (await dstuserdata.user_first_stake(_userid)).txtime_str
         in_out_txs = await dstuserdata.get_user_in_out_tx(_userid)
 
     embed = discord.Embed(
@@ -245,6 +247,8 @@ async def profile(ctx, user=None):
     embed.add_field(name='Immature:', value=dst_template.format(immature), inline=True)
     embed.add_field(name='Stake:(does not include immature)', value='{:}% ({})'.format(stake * 100, stake_time),
                     inline=False)
+    if join_time != '':
+        embed.add_field(name="Join time:", value=join_time, inline=False)
     if len(in_out_txs) > 0:
         in_out_tx_template = '({:,} DST) [{}](https://iquidus.dstra.io/tx/{})'
         in_out_tx = ' | '.join(
