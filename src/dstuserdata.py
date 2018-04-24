@@ -30,12 +30,12 @@ async def get_tx_count():
 async def claim_tx(userid, txid):
     user = await Users.find(userid)
     if not user:
-        return False
+        return -1
     stakeTx = await DstInOutStake.findAll('txid=?', txid)
     if not stakeTx or len(stakeTx) == 0:
-        return False
+        return -2
     if stakeTx[0].userid != const.POS_NOUSER_ID:
-        return False
+        return -3
     stakeTx = stakeTx[0]
     stakeTx.userid = userid
     stakeTx.username = user.name
@@ -46,7 +46,7 @@ async def claim_tx(userid, txid):
     stakeTx.start_balance = 0
     stakeTx.stage_pos_profit = 0
     await stakeTx.update()
-    return True
+    return 0
 
 
 async def get_no_owner_amount():
@@ -54,12 +54,45 @@ async def get_no_owner_amount():
     _no_owner_amount = await DstInOutStake.findFields('sum(change_amount) as change_amount',
                                                       'userid=? and isonchain=?',
                                                       [const.POS_NOUSER_ID, 1])
+    if _no_owner_amount:
+        _no_owner_amount = _no_owner_amount[0].change_amount
+    else:
+        _no_owner_amount = 0
+
+    if _no_owner_amount is None:
+        _no_owner_amount = 0
     return _no_owner_amount
+
+
+async def get_immature_amount():
+    _immature_amount = await DstInOutStake.findFields('sum(change_amount) as change_amount',
+                                                      'isonchain=? and isprocess=?', [1, 0])
+    if _immature_amount:
+        _immature_amount = _immature_amount[0].change_amount
+    else:
+        _immature_amount = 0
+
+    if _immature_amount is None:
+        _immature_amount = 0
+    return _immature_amount
 
 
 async def wallet_info():
     _wallet_info = await DstWalletBalance.find(1)
     return _wallet_info
+
+
+async def get_user_immature_amount(userid):
+    _immature_amount = await DstInOutStake.findFields('sum(change_amount) as change_amount',
+                                                      'userid=? and isonchain=? and isprocess=?', [userid, 1, 0])
+    if _immature_amount:
+        _immature_amount = _immature_amount[0].change_amount
+    else:
+        _immature_amount = 0
+
+    if _immature_amount is None:
+        _immature_amount = 0
+    return _immature_amount
 
 
 async def user_dailies(userid, limit=0, step=5):

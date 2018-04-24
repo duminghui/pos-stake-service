@@ -5,8 +5,6 @@
 Default configurations.
 '''
 
-__author__ = 'Michael Liao'
-
 configs = {
     'db': {
         'host': 'pos-mysql',

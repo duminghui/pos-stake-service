@@ -39,6 +39,7 @@ def listtransactions(count, frm):
     :param frm:
     :return:
     """
+    # return __cmd("listtransactions '*' %s %s" % (count, frm))
     return __cmd("listtransactions airdrop %s %s" % (count, frm))
 
 

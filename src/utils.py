@@ -2,6 +2,7 @@
 #  -*- coding: utf-8 -*-
 import time
 from time import struct_time
+import datetime
 
 
 class Dict(dict):
@@ -31,14 +32,18 @@ def toDict(d):
     return D
 
 
-def get_gmt_time_yyyymmddhhmmss(timestamp=time.gmtime(time.time())):
+def get_gmt_time_yyyymmddhhmmss(timestamp=None):
+    if timestamp is None:
+        timestamp = time.gmtime(time.time())
     if not isinstance(timestamp, struct_time):
         timestamp = time.gmtime(timestamp)
     str_time = time.strftime('%Y-%m-%d %H:%M:%S', timestamp)
     return str_time
 
 
-def get_gmt_time_yyyymmdd(timestamp=time.gmtime(time.time())):
+def get_gmt_time_yyyymmdd(timestamp=None):
+    if timestamp is None:
+        timestamp = time.gmtime(time.time())
     if not isinstance(timestamp, struct_time):
         timestamp = time.gmtime(timestamp)
     str_time = time.strftime('%Y-%m-%d', timestamp)
@@ -51,11 +56,40 @@ def get_timestamp_daily_last_second(timestamp):
 
 
 if __name__ == '__main__':
-    print(get_gmt_time_yyyymmddhhmmss(1524009599 + 1))
-    print(get_timestamp_daily_last_second(time.time()))
-    i = 10
-    # i += 1
-    i += (4 + 3)
-    print(i)
+    l1 = [1, 2, 3, 4, 5, 6, 7, 8]
+    final_page = False
+    l2 = l1[1:] if final_page else l1[1:-1]
+    print(l2)
+    final_page = True
+    l2 = l1[1:] if final_page else l1[1:-1]
+    print(l2)
+    d1 = toDict({'a': 'a', 'b': 'b', 'c': 'd'})
+    print('a' in d1)
+    print('d' in d1)
+
+# l1 = ['b', 'c', 'd', 'b', 'c', 'a', 'a']
+# l2 = sorted(set(l1), key=l1.index)
+# print(l1)
+# print(l2)
+# l1.extend(l2)
+# print(l1)
+# l2 = ['a', 'b', 'c', 'd']
+# print(l2[1:])
+# print(l2[0:])
+# print(l2[1:-1])
+# l2.reverse()
+# print(l2)
+# d1 = toDict({'a': 'a', 'b': 'b'})
+# d1 = {'a': 'a', 'b': 'b'}
+# d1['c'] = 'c'
+# d1.d = 'd'
+# print(d1)
+# print(datetime.datetime.utcfromtimestamp(time.time()))
+# print(get_gmt_time_yyyymmddhhmmss(1524009599 + 1))
+# print(get_timestamp_daily_last_second(time.time()))
+# i = 10
+# i += 1
+# i += (4 + 3)
+# print(i)
 # print(get_gmt_time_yyyymmdd(time.time()))
 # print(get_gmt_time_yyyymmddhhmmss(1))

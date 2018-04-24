@@ -2,11 +2,7 @@
 #  -*- coding: utf-8 -*-
 
 import dstracmd
-import decimal
 from decimal import Decimal
-from decimal import getcontext
-from decimal import localcontext
-import orm
 from apscheduler.triggers.interval import IntervalTrigger, datetime
 import datetime as dt
 from models import *
@@ -64,7 +60,9 @@ async def start_scan(scheduler):
 
 async def __all_jobs():
     await  __scan_balance_job()
-    await __scan_transactions_job()
+    await __process_immature_transactions()
+    # await __scan_transactions_job()
+    await __scan_transactions_job2()
     await __claim_tx()
     # await __claim_tx_test()
     await __total_stakes_job()
@@ -108,6 +106,12 @@ async def __claim_tx_test():
     # dumh 2.00000000
     await DstInOutStake.updateByWhere('txid=?', ['4679e8a31331144ebd3bf50e80453a741eaf5c560571e103790a4b6d4488526f'],
                                       userid='404504209241669642', username='dumh')
+    # dumh ﻿1902.137903
+    await DstInOutStake.updateByWhere('txid=?', ['ae515f8d3829f7f4632519362285e961b7825c10885771fdc0f4922b5c706bef'],
+                                      userid='404504209241669642', username='dumh')
+    # Parker Lee ﻿431.3013
+    await DstInOutStake.updateByWhere('txid=?', ['43c326304210a4a7e59a72ecb9a3bca5ad86d5b757e3c4a1d9b76fabb44851d8'],
+                                      userid='401916285929127947', username='Parker Lee')
 
 
 async def __claim_tx():
@@ -150,6 +154,18 @@ async def __claim_tx():
     # dumh 10.00000000
     await DstInOutStake.updateByWhere('txid=?', ['1210c38c31b53dd6923ffe35b9a7ab9ce40cee83564d3ac5568b9771e0202fd6'],
                                       userid='404504209241669642', username='dumh')
+    # dumh ﻿1902.137903
+    await DstInOutStake.updateByWhere('txid=?', ['ae515f8d3829f7f4632519362285e961b7825c10885771fdc0f4922b5c706bef'],
+                                      userid='404504209241669642', username='dumh')
+    # Parker Lee ﻿431.3013
+    await DstInOutStake.updateByWhere('txid=?', ['43c326304210a4a7e59a72ecb9a3bca5ad86d5b757e3c4a1d9b76fabb44851d8'],
+                                      userid='401916285929127947', username='Parker Lee')
+    # mako jr ﻿2946.00
+    await DstInOutStake.updateByWhere('txid=?', ['6a2c17e7322f8609cb209252d134ab153a43f0126645a08282f94ba45e1b7372'],
+                                      userid='396837819550662668', username='mako jr')
+    # cat Imao 1194.108679
+    await DstInOutStake.updateByWhere('txid=?', ['c7feaeb850fdfb409a2f9246cc74a7a0c67de1d80e7801861ed6664d4118128f'],
+                                      userid='411932460344016896', username='cat Imao')
 
 
 async def __scan_balance_job():
@@ -298,8 +314,121 @@ if __name__ == '__main__':
     print(str_time)
 
 
+def __log_tx(index, tx):
+    logging.info('{:3}. {} {} {}'.format(index, tx.txid, tx.amount, tx.category))
+
+
+async def __scan_transactions_job2():
+    last_process_txid = ''
+    transactions = await DstTransactions.findAll(orderBy="txtime DESC", limit=1)
+    if len(transactions) != 0:
+        last_process_txid = transactions[0].txid
+    step = 50
+    final_page = False
+    while not final_page:
+        logging.info('last_process_txid:{}'.format(last_process_txid))
+        start_index, count = __get_index_count_by_txid(last_process_txid)
+        logging.info("#1,start_index:{},count,{}".format(start_index, count))
+        if count == 0 or start_index == 0:
+            return
+        # 计算从区块链上获取数据的开始位置, 及结束位置
+        if start_index == -1:
+            # 当数据库中没有数据的时候, 返回-1,这个时候从链最开始进行处理
+            start_index = count - step
+        else:
+            # 中间处理的加上上一批次最后处理的, 用于检验是否完整的链
+            start_index -= (step - 1)
+        if start_index <= 0:
+            # 最新页的处理方式
+            step += start_index
+            start_index = 0
+            final_page = True
+
+        txs = dstracmd.listtransactions(step, start_index)
+        txs_count = len(txs)
+        logging.info('#2, step:{}, start_index:{}, len(txs):{}, count:{}'.format(step, start_index, txs_count, count))
+
+        if txs_count > 6:
+            __log_tx(start_index + txs_count - 1, txs[0])
+            __log_tx(start_index + txs_count - 2, txs[1])
+            __log_tx(start_index + txs_count - 3, txs[2])
+            logging.info('.................')
+            __log_tx(start_index + 2, txs[-3])
+            __log_tx(start_index + 1, txs[-2])
+            __log_tx(start_index, txs[-1])
+        else:
+            for index, t in enumerate(txs):
+                __log_tx(start_index + txs_count - index - 1, t)
+
+        last_tx = txs[0]
+        if last_process_txid == '':
+            # 最旧的一条数据入库
+            txtime = last_tx.time
+            if last_tx.txid in const.POS_EFFECTIVE_AT_ONCE_TXID:
+                pos_time = last_tx.time
+            else:
+                pos_time = last_tx.time + const.POS_EFFECTIVE_TIME
+            await DstInOutStake(change_amount=last_tx.amount, txid=last_tx.txid,
+                                txtime=txtime,
+                                txtime_str=get_gmt_time_yyyymmddhhmmss(txtime),
+                                pos_time=pos_time,
+                                pos_time_str=get_gmt_time_yyyymmddhhmmss(pos_time),
+                                isprocess=False, isonchain=True,
+                                change_username='', comment='add coin').save()
+            await DstTransactions(txid=last_tx.txid, idx=0, category=last_tx.category, amount=last_tx.amount,
+                                  txtime=last_tx.time,
+                                  txtime_str=get_gmt_time_yyyymmddhhmmss(last_tx.time)).save()
+        elif last_process_txid != last_tx.txid:
+            raise Exception("tx chain error: last:[%s], chain first:[%s]" % (last_process_txid, last_tx.txid))
+
+        tx_ids = []
+        for index, tx in enumerate(txs[1:], 1):
+            tx_id = tx.txid
+            if tx_id in tx_ids:
+                continue
+            last_process_txid = tx_id
+            tx_ids.append(tx_id)
+            idx = count - (start_index + txs_count) + index
+            tx_db = DstTransactions(txid=tx_id, idx=idx, category=tx.category, amount=tx.amount, txtime=tx.time,
+                                    txtime_str=get_gmt_time_yyyymmddhhmmss(tx.time))
+            if tx.category == 'generate' or tx.category == 'immature':
+                # await tx_db.save()
+                pass
+            elif tx.txid in const.POS_RECEIVE_2_GENERATE:
+                tx_db.category = 'generate'
+            else:
+                tx_in_chain = dstracmd.gettransaction(tx.txid)
+                tx_amount = tx_in_chain.amount
+                tx_fee = tx_in_chain.get('fee')
+                if tx_fee is None or tx_amount < 0:
+                    # 如果不包含fee就是从别人那里收到的, 如果amount<0是发出去的, 也要要记录占比
+                    txtime = tx.time
+                    if tx_amount < 0:
+                        tx_db.category = 'send'
+                        tx_amount = Decimal(str(tx_amount)) + Decimal(str(tx_fee))
+                        pos_time = txtime
+                    else:
+                        tx_db.category = 'receive'
+                        if tx_id in const.POS_EFFECTIVE_AT_ONCE_TXID:
+                            pos_time = txtime
+                        else:
+                            pos_time = txtime + const.POS_EFFECTIVE_TIME
+
+                    await DstInOutStake(change_amount=tx_amount, txid=tx_id,
+                                        txtime=txtime,
+                                        txtime_str=get_gmt_time_yyyymmddhhmmss(txtime),
+                                        pos_time=pos_time,
+                                        pos_time_str=get_gmt_time_yyyymmddhhmmss(pos_time),
+                                        isprocess=False, isonchain=True, change_username='',
+                                        comment='add coin').save()
+                elif tx_amount == 0:
+                    # 这种是split时产生的费用
+                    tx_db.amount = tx_fee
+                    tx_db.category = 'sendtoself'
+            await tx_db.save()
+
+
 async def __scan_transactions_job():
-    await __process_immature_transactions()
     last_process_txid = ''
     transactions = await DstTransactions.findAll(orderBy="txtime DESC", limit=1)
     if len(transactions) != 0:
@@ -307,8 +436,8 @@ async def __scan_transactions_job():
     # 每次读100个,处理98个,第一个做为是否接上一批链的判断, 最后一个做为是否发给自己的预留验证
     step = 50
     step_process_count = step - 1
-    final = False
-    while not final:
+    final_page = False
+    while not final_page:
         print("last_process_txid:%s" % last_process_txid)
         start_index, count = __get_index_count_by_txid(last_process_txid)
         print('#1', 'start_index', start_index, 'count', count)
@@ -318,13 +447,13 @@ async def __scan_transactions_job():
             # 最开始从最后面的处理
             start_index = count - step
         else:
-            # 中间处理的加上上一条最后处理的, 用于检验是否完整的链
+            # 中间处理的加上上一批次最后处理的, 用于检验是否完整的链
             start_index -= (step - 1)
         if start_index < 0:
             # 最新页的处理方式
             step += start_index
             start_index = 0
-            final = True
+            final_page = True
         #
         txs = dstracmd.listtransactions(step, start_index)
         print('#2', 'step', step, 'start_index', start_index, 'len(txs)', len(txs), 'count', count)
@@ -398,10 +527,12 @@ async def __scan_transactions_job():
                                             pos_time_str=get_gmt_time_yyyymmddhhmmss(pos_time),
                                             isprocess=False, isonchain=True, change_username='',
                                             comment='add coin').save()
+                    # elif t.txid == txs[process_count].txid or t.txid == 'b519f12a36bc48cf1a6753a1de23693de79c0cc762a201324875e6f53eba2b52':
                     elif t.txid == txs[process_count].txid:
                         tx_detail = dstracmd.gettransaction(t.txid)
                         tx_db.category = 'sendtoself'
                         tx_db.amount = tx_detail.fee
+                        print("######### fee", tx_db.amount)
                     else:
                         if t.txid in const.POS_RECEIVE_2_GENERATE:
                             tx_db.category = 'generate'
@@ -424,7 +555,7 @@ async def __scan_transactions_job():
                 last_process_txid = t.txid
 
                 #  中间轮不处理最后一条,最后一条只是用来做判断.
-                if not final and process_count == step_process_count:
+                if not final_page and process_count == step_process_count:
                     break
         # break
         # i = i + 1

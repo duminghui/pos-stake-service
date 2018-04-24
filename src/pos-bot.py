@@ -12,7 +12,9 @@ import datetime
 import asyncio
 import const
 import time
-import collections
+import pos_bot_config
+import utils
+from decimal import Decimal
 
 bot = commands.Bot(command_prefix='?')
 
@@ -187,8 +189,15 @@ def get_start_end_pageno(pageno, item_count, page_item_count):
     return start, end, pageno
 
 
+def _log(ctx, command, **kw):
+    logging.info(
+        '[{}][{}],[CMD:{}], args:{}\n'.format(utils.get_gmt_time_yyyymmddhhmmss(), ctx.message.author.name, command,
+                                              kw))
+
+
 @bot.command()
 async def profile(ctx, user=None):
+    _log(ctx, 'profile', user=user)
     _userid = None
     if user:
         _userid = get_user_id(user)
@@ -203,24 +212,28 @@ async def profile(ctx, user=None):
     _daily_profit = await dstuserdata.user_dailies(_userid, 0, 1)
     if len(_daily_profit) == 0:
         stake = 0
+        stake_time = utils.get_gmt_time_yyyymmddhhmmss(time.time())
         pos_rewards = 0
         all_pos_rewards = 0
         injection = 0
+        immature = 0
         balance = 0
         timestamp = time.time()
         in_out_txs = []
     else:
         stake = _daily_profit[0].stake
+        stake_time = utils.get_gmt_time_yyyymmddhhmmss(_daily_profit[0].pos_time)
         pos_rewards = _daily_profit[0].daily_profit
-        all_pos_rewards = _daily_profit[0].all_pos_profit
-        injection = _daily_profit[0].injection
+        all_pos_rewards = Decimal(str(_daily_profit[0].all_pos_profit))
+        immature = Decimal(str(await dstuserdata.get_user_immature_amount(_userid)))
+        injection = (Decimal(str(_daily_profit[0].injection)) + immature).__round__(const.PREC_BALANCE)
         balance = (all_pos_rewards + injection).__round__(const.PREC_BALANCE)
         timestamp = _daily_profit[0].profit_time
         in_out_txs = await dstuserdata.get_user_in_out_tx(_userid)
 
     embed = discord.Embed(
         # title='{}\' Profile',
-        timestamp=datetime.datetime.utcfromtimestamp(timestamp),
+        # timestamp=datetime.datetime.utcfromtimestamp(timestamp),
         colour=discord.Colour(0x00FF00))
     dst_template = '{:,} DST'
     # embed.set_thumbnail(url=_user.avatar_url)
@@ -229,19 +242,22 @@ async def profile(ctx, user=None):
     embed.add_field(name='All PoS rewards:', value=dst_template.format(all_pos_rewards), inline=True)
     embed.add_field(name="Injection:", value=dst_template.format(injection), inline=True)
     embed.add_field(name='Balance:', value=dst_template.format(balance), inline=True)
-    embed.add_field(name='Stake:', value='{:}%'.format(stake * 100), inline=False)
+    embed.add_field(name='Immature:', value=dst_template.format(immature), inline=True)
+    embed.add_field(name='Stake:(does not include immature)', value='{:}% ({})'.format(stake * 100, stake_time),
+                    inline=False)
     if len(in_out_txs) > 0:
-        in_out_tx_template = '{:,} DST [{}](https://iquidus.dstra.io/tx/{})'
+        in_out_tx_template = '({:,} DST) [{}](https://iquidus.dstra.io/tx/{})'
         in_out_tx = ' | '.join(
             map(lambda tx: in_out_tx_template.format(tx.change_amount, tx.txid[:10], tx.txid),
                 in_out_txs))
         embed.add_field(name='Last 10 TX:', value=in_out_tx, inline=False)
-    embed.set_footer(text='Last Update:')
+    embed.set_footer(text='Last Update:{}'.format(utils.get_gmt_time_yyyymmddhhmmss(timestamp)))
     await ctx.send(embed=embed)
 
 
 @bot.command()
 async def txs(ctx, pageno=1):
+    _log(ctx, 'txs', pageno=pageno)
     if pageno:
         if not isnumber(pageno):
             pageno = 1
@@ -278,6 +294,7 @@ async def txs(ctx, pageno=1):
 
 @bot.command()
 async def claimtx(ctx, userid=None, txid=None):
+    _log(ctx, 'ctx', userid=userid, txid=txid)
     if not userid or not txid:
         await ctx.send('```MD\nPlease input user and txid```')
         return
@@ -291,49 +308,65 @@ async def claimtx(ctx, userid=None, txid=None):
         title='Tx claim',
         description='',
         color=0x00FF00)
-    if result:
-        # await ctx.send('```Python\n{0} claim [{1}](https://iquidus.dstra.io/tx/{1}) success```'.format(userid, txid),)
-        embed.add_field(name='Result:',
-                        value='{0} claim Tx [{1}](https://iquidus.dstra.io/tx/{1}) success, Please wait for a while to start new stake'.format(
-                            userid, txid))
-        await ctx.send(embed=embed)
+    if result == 0:
+        result_msg = 'SUCCESS, Please wait for 8 hour to start new stake'
+    elif result == -1:
+        result_msg = 'ERROR, Don\'t had this user in database'
+    elif result == -2:
+        result_msg = 'ERROR, Don\t had this TX in database, please wait for the scan service to scan this TX, you can use command ?txs to view'
+    elif result == -3:
+        result_msg = 'ERROR, this TX had owner'
     else:
-        # await ctx.send('```Pytnon\n{0} claim [{1}](https://iquidus.dstra.io/tx/{1}) error```'.format(userid, txid))
-        embed.add_field(name='Result:',
-                        value='{0} claim Tx [{1}](https://iquidus.dstra.io/tx/{1}) error'.format(userid, txid))
-        await ctx.send(embed=embed)
+        result_msg = 'Other ERROR'
+
+    embed.add_field(name='Result:',
+                    value='{0} claim Tx [{1}](https://iquidus.dstra.io/tx/{1}) {2}'.format(
+                        userid, txid, result_msg))
+    await ctx.send(embed=embed)
 
 
 @bot.command()
 async def walletinfo(ctx):
+    _log(ctx, 'walletinfo')
     """
     钱包信息
     :param ctx:
     :return:
     """
+
+    embed = discord.Embed(
+        title='Wallet Info',
+        timestamp=datetime.datetime.utcfromtimestamp(time.time()),
+        colour=discord.Colour(0x00FF00))
+    embed.set_footer(text='Last Update:')
+
     _walletinfo = await dstuserdata.wallet_info()
     if _walletinfo:
         no_owner_amount = await dstuserdata.get_no_owner_amount()
-        if no_owner_amount:
-            no_owner_amount = no_owner_amount[0].change_amount
-        else:
-            no_owner_amount = 0
+        _immature_amount = await  dstuserdata.get_immature_amount()
+        dst_template = '{:,} DST'
 
-        if not no_owner_amount:
-            no_owner_amount = 0
+        embed.timestamp = datetime.datetime.utcfromtimestamp(_walletinfo.update_at)
+        embed.add_field(name='Spendable:', value=dst_template.format(_walletinfo.balance), inline=True)
+        embed.add_field(name='Stake', value=dst_template.format(_walletinfo.stake), inline=True)
+        embed.add_field(name='Total', value=dst_template.format(_walletinfo.balance + _walletinfo.stake), inline=True)
+        embed.add_field(name='Immature', value=dst_template.format(_immature_amount), inline=False)
+        embed.add_field(name='No Owner', value=dst_template.format(no_owner_amount), inline=False)
 
-        msg = '```MD\n{:>11}:{:>23,.8f} DST\n{:>11}:{:23,.8f} DST\n{:>11}:{:>23,.8f} DST\n\n{:>11}:{:>23,} DST\n\n{:>11}:{:>27}```'.format(
-            'Spendable', _walletinfo.balance, 'Stake', _walletinfo.stake, 'Total',
-            _walletinfo.balance + _walletinfo.stake, "No Owner",
-            no_owner_amount, "Update Time", _walletinfo.update_at_str
-        )
-        await ctx.send(msg)
+        # msg = '```MD\n{:>11}:{:>23,.8f} DST\n{:>11}:{:23,.8f} DST\n{:>11}:{:>23,.8f} DST\n\n{:>11}:{:>23,} DST\n\n{:>11}:{:>27}```'.format(
+        #     'Spendable', _walletinfo.balance, 'Stake', _walletinfo.stake, 'Total',
+        #     _walletinfo.balance + _walletinfo.stake, "No Owner",
+        #     no_owner_amount, "Update Time", _walletinfo.update_at_str
+        # )
     else:
-        await ctx.send('```钱包信息还未更新```')
+        embed.description = '```钱包信息还未更新```'
+
+    await ctx.send(embed=embed)
 
 
 @bot.command()
 async def myrewards(ctx, user=None, pageno=1):
+    _log(ctx, 'myrewards', user=user, pageno=pageno)
     """
     个人每天收益
     :param ctx:
@@ -398,6 +431,8 @@ async def myrewards(ctx, user=None, pageno=1):
 
 @bot.command()
 async def dailyrewards(ctx, pageno=None):
+    _log(ctx, 'dailyrewards', pageno=pageno)
+
     """
     每天总收益
     :param ctx:
@@ -438,6 +473,7 @@ async def dailyrewards(ctx, pageno=None):
 
 @bot.command()
 async def allrewards(ctx, pageno=None):
+    _log(ctx, 'allrewards', pageno=pageno)
     """
     总收益
     :param ctx:
@@ -495,6 +531,7 @@ async def allrewards(ctx, pageno=None):
 
 @bot.command()
 async def stake(ctx, user=None, pageno=1):
+    _log(ctx, 'stake', user=user, pageno=pageno)
     _userid = None
     if user:
         _userid = get_user_id(user)
@@ -590,4 +627,4 @@ async def init(_loop):
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
 
-    bot.run('NDM2NTIyNzg5MzUzMjkxNzc2.DbozkA.T_0EwXCfYhxcaahqC46mQGLuHG0')
+    bot.run(pos_bot_config.POS_BOT_TOKEN)

@@ -107,4 +107,5 @@ docker/dstrad
 docker/trawd
 docker/get-pip.py
 docker/miniupnpc-1.9.20140401.tar.gz
+src/pos_bot_config.py
 
