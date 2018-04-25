@@ -323,21 +323,44 @@ async def __scan_transactions_job2():
     transactions = await DstTransactions.findAll(orderBy="txtime DESC", limit=1)
     if len(transactions) != 0:
         last_process_txid = transactions[0].txid
+    if last_process_txid == '':
+        start_index, count = __get_index_count_by_txid(last_process_txid)
+        # oldest transaction
+        last_tx = dstracmd.listtransactions(1, count - 1)[0]
+        # the oldest write to db
+        txtime = last_tx.time
+        if last_tx.txid in const.POS_EFFECTIVE_AT_ONCE_TXID:
+            pos_time = last_tx.time
+        else:
+            pos_time = last_tx.time + const.POS_EFFECTIVE_TIME
+        await DstInOutStake(change_amount=last_tx.amount, txid=last_tx.txid,
+                            txtime=txtime,
+                            txtime_str=get_gmt_time_yyyymmddhhmmss(txtime),
+                            pos_time=pos_time,
+                            pos_time_str=get_gmt_time_yyyymmddhhmmss(pos_time),
+                            isprocess=False, isonchain=True,
+                            change_username='', comment='add coin').save()
+        await DstTransactions(txid=last_tx.txid, idx=0, category=last_tx.category, amount=last_tx.amount,
+                              txtime=txtime,
+                              txtime_str=get_gmt_time_yyyymmddhhmmss(txtime)).save()
+        last_process_txid = last_tx.txid
+
     step = 50
     final_page = False
     while not final_page:
         logging.info('last_process_txid:{}'.format(last_process_txid))
         start_index, count = __get_index_count_by_txid(last_process_txid)
         logging.info("#1,start_index:{},count,{}".format(start_index, count))
-        if count == 0 or start_index == 0:
+        # if count == 0 or start_index == 0:
+        if count == 0:
             return
         # 计算从区块链上获取数据的开始位置, 及结束位置
-        if start_index == -1:
-            # 当数据库中没有数据的时候, 返回-1,这个时候从链最开始进行处理
-            start_index = count - step
-        else:
-            # 中间处理的加上上一批次最后处理的, 用于检验是否完整的链
-            start_index -= (step - 1)
+        # if start_index == -1:
+        # 当数据库中没有数据的时候, 返回-1,这个时候从链最开始进行处理
+        # start_index = count - step
+        # else:
+        # 中间处理的加上上一批次最后处理的, 用于检验是否完整的链
+        start_index -= (step - 1)
         if start_index <= 0:
             # 最新页的处理方式
             step += start_index
@@ -361,24 +384,7 @@ async def __scan_transactions_job2():
                 __log_tx(start_index + txs_count - index - 1, t)
 
         last_tx = txs[0]
-        if last_process_txid == '':
-            # 最旧的一条数据入库
-            txtime = last_tx.time
-            if last_tx.txid in const.POS_EFFECTIVE_AT_ONCE_TXID:
-                pos_time = last_tx.time
-            else:
-                pos_time = last_tx.time + const.POS_EFFECTIVE_TIME
-            await DstInOutStake(change_amount=last_tx.amount, txid=last_tx.txid,
-                                txtime=txtime,
-                                txtime_str=get_gmt_time_yyyymmddhhmmss(txtime),
-                                pos_time=pos_time,
-                                pos_time_str=get_gmt_time_yyyymmddhhmmss(pos_time),
-                                isprocess=False, isonchain=True,
-                                change_username='', comment='add coin').save()
-            await DstTransactions(txid=last_tx.txid, idx=0, category=last_tx.category, amount=last_tx.amount,
-                                  txtime=last_tx.time,
-                                  txtime_str=get_gmt_time_yyyymmddhhmmss(last_tx.time)).save()
-        elif last_process_txid != last_tx.txid:
+        if last_process_txid != last_tx.txid:
             raise Exception("tx chain error: last:[%s], chain first:[%s]" % (last_process_txid, last_tx.txid))
 
         tx_ids = []
