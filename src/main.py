@@ -35,6 +35,7 @@ async def init(loop):
     scheduler = AsyncIOScheduler()
     scheduler.start()
     await dstra_scan_service.start_scan(scheduler)
+    # await dstra_scan_service.__scan_unspents()
     # dailies = await DstDailyProfit.findFields(['sum(all_pos_profit) as all_pos_profit', 'sum(injection) as injection'],
     #                                           'isdailynode=?', [1], groupBy=['profit_time_str', 'profit_time'],
     #                                           orderBy='profit_time desc')

@@ -88,3 +88,17 @@ class DstDailyProfit(Model):
     dailyflag_str = StringField(ddl='varchar(50)')
     profit_time = IntegerField()
     profit_time_str = StringField(ddl='varchar(50)')
+
+
+class DstStakingInfo(Model):
+    __table__ = 'dst_staking_info'
+    txid = StringField(primary_key=True, ddl='varchar(50)')
+    vin_txid = StringField(ddl='varchar(50)')
+    vin_vout = IntegerField()
+    vin_amount = FloatField()
+    vin_tx_time = IntegerField()
+    vin_tx_time_str = StringField(ddl='varchar(50)')
+    staking_time = IntegerField()
+    staking_time_str = StringField(ddl='varchar(50)', default='')
+    wait_time = IntegerField()
+    wait_time_str = StringField(ddl='varchar(50)', default='')

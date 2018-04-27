@@ -40,20 +40,23 @@ def listtransactions(count, frm):
     :return:
     """
     # return __cmd("listtransactions '*' %s %s" % (count, frm))
-    return __cmd("listtransactions airdrop %s %s" % (count, frm))
+    return __cmd('listtransactions airdrop %s %s' % (count, frm))
 
 
 def gettransaction(txid):
-    return __cmd("gettransaction %s" % txid)
+    return __cmd('gettransaction %s' % txid)
 
 
 def getbestblockhash():
-    cmd_result = ''
-    cmdStr = "/root/dstrad getbestblockhash"
+    cmdStr = '/root/dstrad getbestblockhash'
     # logging.info("cmd:%s" % cmdStr)
     cmd_result_cxt = Popen(cmdStr, stdout=PIPE, shell=True).stdout.read().decode("utf-8")
     return cmd_result_cxt
 
 
 def getbestblock():
-    return __cmd("getblock {}".format(getbestblockhash()))
+    return __cmd('getblock {}'.format(getbestblockhash()))
+
+
+def listunspent():
+    return __cmd('listunspent')

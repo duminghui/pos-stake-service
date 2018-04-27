@@ -32,6 +32,16 @@ def toDict(d):
     return D
 
 
+def get_time_days_hhmmss(days, timestamp=None):
+    if timestamp is None:
+        timestamp = time.gmtime(time.time())
+    if not isinstance(timestamp, struct_time):
+        timestamp = time.gmtime(timestamp)
+    str_time = time.strftime('%H:%M:%S', timestamp)
+    str_time = '{} days {}'.format(days, str_time)
+    return str_time
+
+
 def get_gmt_time_yyyymmddhhmmss(timestamp=None):
     if timestamp is None:
         timestamp = time.gmtime(time.time())
@@ -55,17 +65,37 @@ def get_timestamp_daily_last_second(timestamp):
     return int(time.mktime(time.strptime(time_str, '%Y-%m-%d %H:%M:%S')))
 
 
+run_claim_tx = False
+
+
+def test():
+    global run_claim_tx
+    if not run_claim_tx:
+        print("######")
+        run_claim_tx = True
+
+
 if __name__ == '__main__':
-    l1 = [1, 2, 3, 4, 5, 6, 7, 8]
-    final_page = False
-    l2 = l1[1:] if final_page else l1[1:-1]
-    print(l2)
-    final_page = True
-    l2 = l1[1:] if final_page else l1[1:-1]
-    print(l2)
-    d1 = toDict({'a': 'a', 'b': 'b', 'c': 'd'})
-    print('a' in d1)
-    print('d' in d1)
+    # print(get_time_jhhmmss(100 - 1))
+    datetime1 = datetime.datetime.utcfromtimestamp(1524537648)
+    datetime2 = datetime.datetime.utcfromtimestamp(1524677088)
+    datetime3 = datetime2 - datetime1
+    print(get_time_days_hhmmss(datetime3.days, datetime3.seconds))
+
+# l1 = [1, 2, 3, 4, 5, 6, 7, 8]
+# final_page = False
+# l2 = l1[1:] if final_page else l1[1:-1]
+# print(l2)
+# final_page = True
+# l2 = l1[1:] if final_page else l1[1:-1]
+# print(l2)
+# d1 = toDict({'a': 'a', 'b': 'b', 'c': 'd'})
+# print('a' in d1)
+# print('d' in d1)
+# print(run_claim_tx)
+# test()
+# print(run_claim_tx)
+# test()
 
 # l1 = ['b', 'c', 'd', 'b', 'c', 'a', 'a']
 # l2 = sorted(set(l1), key=l1.index)

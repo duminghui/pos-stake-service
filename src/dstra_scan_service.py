@@ -58,12 +58,18 @@ async def start_scan(scheduler):
     # # 0.3739477522259330891967019202
 
 
+run_claim_tx = False
+
+
 async def __all_jobs():
-    await  __scan_balance_job()
+    await __scan_balance_job()
     await __process_immature_transactions()
     # await __scan_transactions_job()
     await __scan_transactions_job2()
-    await __claim_tx()
+    global run_claim_tx
+    if not run_claim_tx:
+        await __claim_tx()
+        run_claim_tx = True
     # await __claim_tx_test()
     await __total_stakes_job()
     await __daily_pos_profit_job()
@@ -166,28 +172,38 @@ async def __claim_tx():
     # cat Imao 1194.108679
     await DstInOutStake.updateByWhere('txid=?', ['c7feaeb850fdfb409a2f9246cc74a7a0c67de1d80e7801861ed6664d4118128f'],
                                       userid='411932460344016896', username='cat Imao')
+    # lucky168 1200.00000000
+    await DstInOutStake.updateByWhere('txid=?', ['1e9eb0a9f1def2068b120b8d35b3e565ed9011a5574b39253098823bfa4050b5'],
+                                      userid='407552893806182411', username='lucky168')
+    # baobao 2000.00000000
+    await DstInOutStake.updateByWhere('txid=?', ['77882a1d20a342dbd714ee0f4fd4764fc915ebbc2c1edaaa2d2b22908ce86c15'],
+                                      userid='403478549379678211', username='baobao')
 
 
 async def __scan_balance_job():
     get_info = dstracmd.getinfo()
     # now_time_fix_offset = int(time.time()) + get_info.timeoffset
     block_last_time = dstracmd.getbestblock().time
-    walletBalance = await DstWalletBalance.find(1)
-    if walletBalance is None:
-        walletBalance = DstWalletBalance(id=1, balance=get_info.balance, stake=get_info.stake,
-                                         update_at=block_last_time,
-                                         update_at_st=get_gmt_time_yyyymmddhhmmss(block_last_time))
-        await walletBalance.save()
-    else:
-        # logging.info("before: WalletBalance:%s[%s]" % (
-        #     walletBalance, time.strftime("%y-%m-%d %H:%M:%S", time.localtime(walletBalance.created_at))))
-        walletBalance.balance = get_info.balance
-        walletBalance.stake = get_info.stake
-        walletBalance.update_at = block_last_time
-        walletBalance.update_at_str = get_gmt_time_yyyymmddhhmmss(block_last_time)
-        await walletBalance.update()
-        # logging.info("after: WalletBalance:%s[%s]" % (
-        #     walletBalance, time.strftime("%y-%m-%d %H:%M:%S", time.localtime(walletBalance.created_at))))
+    await DstWalletBalance(id=1, balance=get_info.balance, stake=get_info.stake,
+                           update_at=block_last_time,
+                           update_at_st=get_gmt_time_yyyymmddhhmmss(block_last_time)).replace()
+
+    # walletBalance = await DstWalletBalance.find(1)
+    # if walletBalance is None:
+    #     walletBalance = DstWalletBalance(id=1, balance=get_info.balance, stake=get_info.stake,
+    #                                      update_at=block_last_time,
+    #                                      update_at_st=get_gmt_time_yyyymmddhhmmss(block_last_time))
+    #     await walletBalance.save()
+    # else:
+    #     logging.info("before: WalletBalance:%s[%s]" % (
+    #         walletBalance, time.strftime("%y-%m-%d %H:%M:%S", time.localtime(walletBalance.created_at))))
+    # walletBalance.balance = get_info.balance
+    # walletBalance.stake = get_info.stake
+    # walletBalance.update_at = block_last_time
+    # walletBalance.update_at_str = get_gmt_time_yyyymmddhhmmss(block_last_time)
+    # await walletBalance.update()
+    # logging.info("after: WalletBalance:%s[%s]" % (
+    #     walletBalance, time.strftime("%y-%m-%d %H:%M:%S", time.localtime(walletBalance.created_at))))
 
 
 def __get_transactions_count():
@@ -318,6 +334,33 @@ def __log_tx(index, tx):
     logging.info('{:3}. {} {} {}'.format(index, tx.txid, tx.amount, tx.category))
 
 
+async def __process_staking_info(txid):
+    tx_detail = dstracmd.gettransaction(txid)
+    for vin in tx_detail.vin:
+        vin_tx_id = vin['txid']
+        vin_vout = vin['vout']
+        tx_vin = dstracmd.gettransaction(vin_tx_id)
+        tx_vin_time = tx_vin.time
+        staking_time = tx_detail.time
+        wait_time = staking_time - tx_vin_time
+        tx_vin_time_d = dt.datetime.utcfromtimestamp(tx_vin_time)
+        staking_time_d = dt.datetime.utcfromtimestamp(staking_time)
+        wait_time_d = staking_time_d - tx_vin_time_d
+        wait_time_str = utils.get_time_days_hhmmss(wait_time_d.days, wait_time_d.seconds)
+        vin_amount = tx_vin.vout[vin_vout]['value']
+        unspent = DstStakingInfo(txid=txid, vin_txid=vin_tx_id, vin_vout=vin_vout, vin_amount=vin_amount,
+                                 vin_tx_time=tx_vin_time, vin_tx_time_str=get_gmt_time_yyyymmddhhmmss(tx_vin_time),
+                                 staking_time=staking_time, staking_time_str=get_gmt_time_yyyymmddhhmmss(staking_time),
+                                 wait_time=wait_time, wait_time_str=wait_time_str)
+
+        unspent_dbs = await DstStakingInfo.findAll('vin_txid=? and vin_vout=?', [txid, vin_vout])
+        if len(unspent_dbs) == 1:
+            # 出现这种情况是由于冲突引起的
+            await unspent.update()
+        else:
+            await unspent.save()
+
+
 async def __scan_transactions_job2():
     last_process_txid = ''
     transactions = await DstTransactions.findAll(orderBy="txtime DESC", limit=1)
@@ -327,6 +370,7 @@ async def __scan_transactions_job2():
         start_index, count = __get_index_count_by_txid(last_process_txid)
         # oldest transaction
         last_tx = dstracmd.listtransactions(1, count - 1)[0]
+        logging.info('oldest_txid:{}'.format(last_tx.txid))
         # the oldest write to db
         txtime = last_tx.time
         if last_tx.txid in const.POS_EFFECTIVE_AT_ONCE_TXID:
@@ -348,9 +392,9 @@ async def __scan_transactions_job2():
     step = 50
     final_page = False
     while not final_page:
-        logging.info('last_process_txid:{}'.format(last_process_txid))
+        logging.info('### last_process_txid:{}'.format(last_process_txid))
         start_index, count = __get_index_count_by_txid(last_process_txid)
-        logging.info("#1,start_index:{},count,{}".format(start_index, count))
+        logging.info("### fix before:start_index:{},count,{}".format(start_index, count))
         # if count == 0 or start_index == 0:
         if count == 0:
             return
@@ -369,7 +413,9 @@ async def __scan_transactions_job2():
 
         txs = dstracmd.listtransactions(step, start_index)
         txs_count = len(txs)
-        logging.info('#2, step:{}, start_index:{}, len(txs):{}, count:{}'.format(step, start_index, txs_count, count))
+        logging.info(
+            '### fix after:step:{}, start_index:{}, len(txs):{}, count:{}\n'.format(step, start_index, txs_count,
+                                                                                    count))
 
         if txs_count > 6:
             __log_tx(start_index + txs_count - 1, txs[0])
@@ -399,6 +445,7 @@ async def __scan_transactions_job2():
                                     txtime_str=get_gmt_time_yyyymmddhhmmss(tx.time))
             if tx.category == 'generate' or tx.category == 'immature':
                 # await tx_db.save()
+                await __process_staking_info(tx_id)
                 pass
             elif tx.txid in const.POS_RECEIVE_2_GENERATE:
                 tx_db.category = 'generate'
@@ -518,6 +565,10 @@ async def __scan_transactions_job():
                     # if t.confirmations > const.POS_NO_CONFLICTED_CONFIRMATIONS:
                     #     tx_db.category = 'generate'
                     await tx_db.save()
+                    tx_detail = dstracmd.gettransaction(t.txid)
+                    if len(tx_detail.vin) > 1:
+                        print(t.txid)
+
                 elif t.category == 'receive' and last_process_txid != t.txid:
                     if process_count == txs_count:
                         # 这种情况只会出现在最新页里
@@ -835,15 +886,17 @@ async def __daily_pos_profit_job():
         if len(dst_in_out_stakes):
             step_end_time = dst_in_out_stakes[0].pos_time + 1
 
-        print("#######:start_time(包含),end_time(不包含)", get_gmt_time_yyyymmddhhmmss(daily_profit_start_time),
-              get_gmt_time_yyyymmddhhmmss(step_end_time))
+        logging.info(
+            '######:start_time(包含):{},end_time(不包含):{}'.format(get_gmt_time_yyyymmddhhmmss(daily_profit_start_time),
+                                                               get_gmt_time_yyyymmddhhmmss(step_end_time)))
 
         # 计算当前时间段的总收益
         step_pos_profit = (await DstTransactions.findNumber('sum(`amount`)',
                                                             'txtime>=? and txtime <? and (category=? or category=? or category=?)',
                                                             [daily_profit_start_time, step_end_time, 'generate',
                                                              'sendtoself', 'immature']) or 0)
-        print("##### step_pos_profit:", get_gmt_time_yyyymmddhhmmss(block_last_time), step_pos_profit)
+        logging.info(
+            '######: {} step_pos_profit: {}'.format(get_gmt_time_yyyymmddhhmmss(block_last_time), step_pos_profit))
         step_pos_profit = Decimal(str(step_pos_profit))
 
         # 获取当前处理时间段最老的未成熟币的tx时间

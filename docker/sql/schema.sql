@@ -98,7 +98,7 @@ CREATE TABLE dst_daily_profit(
   `dailyflag_str`     VARCHAR(50)   NOT NULL,
   `profit_time`       BIGINT        NOT NULL,
   `profit_time_str`   VARCHAR(50)   NOT NULL,
-  UNIQUE KEY `idx_dst_daily_profit_id` (`id`),
+  PRIMARY KEY (`id`),
   KEY `idx_dst_daily_profit_time` (`profit_time`),
   KEY `idx_dst_daily_profit_dailyflag` (`dailyflag`),
   KEY `idx_dst_daily_profit_pos_time` (`pos_time`)
@@ -106,3 +106,20 @@ CREATE TABLE dst_daily_profit(
   ENGINE = innodb
   DEFAULT CHARSET = utf8;
 
+CREATE TABLE dst_staking_info(
+    `txid`              VARCHAR(80) NOT NULL,
+    `vin_txid`          VARCHAR(80) NOT NULL,
+    `vin_vout`          BIGINT      NOT NULL,
+    `vin_amount`            REAL(16,8)  NOT NULL,
+    `vin_tx_time`           BIGINT      NOT NULL,
+    `vin_tx_time_str`       VARCHAR(50) NOT NULL,
+    `staking_time`      BIGINT      NOT NULL,
+    `staking_time_str`  VARCHAR(50) NOT NULL,
+    `wait_time`         BIGINT      NOT NULL,
+    `wait_time_str`     VARCHAR(50) NOT NULL,
+    PRIMARY KEY (`vin_txid`,`vin_vout`),
+    KEY `dst_staking_info_txid` (`txid`)
+
+)
+  ENGINE=innodb
+  DEFAULT CHARSET = utf8;
