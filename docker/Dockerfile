@@ -1,4 +1,4 @@
-FROM ubuntu as base
+FROM ubuntu:xenial-20180417 as base
 
 COPY sources.list /etc/apt/sources.list
 COPY get-pip.py /get-pip.py

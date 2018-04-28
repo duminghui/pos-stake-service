@@ -2,6 +2,7 @@ version: '3.6'
 
 services:
     pos-service:
+        image: pos-service:v1
         container_name: pos-service
         build:
             context: .
@@ -13,8 +14,11 @@ services:
         command: tail -f /root/.bashrc
         depends_on:
             - pos-mysql
+        networks:
+          - pos-service-network
 
     pos-mysql:
+        image: pos-mysql:v1
         container_name: pos-mysql
         build:
           context: .
@@ -27,3 +31,10 @@ services:
             - ../run-data/pos-mysql:/var/lib/mysql
         environment:
             MYSQL_ROOT_PASSWORD: posservice
+        networks:
+          - pos-service-network
+
+
+networks:
+  pos-service-network:
+    driver: bridge
