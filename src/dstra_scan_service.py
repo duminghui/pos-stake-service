@@ -184,9 +184,10 @@ async def __scan_balance_job():
     get_info = dstracmd.getinfo()
     # now_time_fix_offset = int(time.time()) + get_info.timeoffset
     block_last_time = dstracmd.getbestblock().time
+    logging.info('######: update time:{}({})'.format(block_last_time, get_gmt_time_yyyymmddhhmmss(block_last_time)))
     await DstWalletBalance(id=1, balance=get_info.balance, stake=get_info.stake,
                            update_at=block_last_time,
-                           update_at_st=get_gmt_time_yyyymmddhhmmss(block_last_time)).replace()
+                           update_at_str=get_gmt_time_yyyymmddhhmmss(block_last_time)).replace()
 
     # walletBalance = await DstWalletBalance.find(1)
     # if walletBalance is None:
