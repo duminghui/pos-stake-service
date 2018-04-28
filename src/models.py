@@ -20,11 +20,12 @@ if __name__ == '__main__':
     print(next_id())
 
 
-class DstWalletBalance(Model):
-    __table__ = 'dst_wallet_balance'
+class DstWalletInfo(Model):
+    __table__ = 'dst_wallet_info'
     id = IntegerField(primary_key=True, default=1)
     balance = FloatField()
     stake = FloatField()
+    blocks = IntegerField()
     update_at = IntegerField()
     update_at_str = StringField(ddl='varchar(50)', default=utils.get_gmt_time_yyyymmddhhmmss)
 

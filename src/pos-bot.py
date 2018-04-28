@@ -356,6 +356,7 @@ async def walletinfo(ctx):
         embed.add_field(name='Total', value=dst_template.format(_walletinfo.balance + _walletinfo.stake), inline=True)
         embed.add_field(name='Immature', value=dst_template.format(_immature_amount), inline=False)
         embed.add_field(name='No Owner', value=dst_template.format(no_owner_amount), inline=False)
+        embed.add_field(name='Blocks', value=_walletinfo.blocks, inline=False)
 
         # msg = '```MD\n{:>11}:{:>23,.8f} DST\n{:>11}:{:23,.8f} DST\n{:>11}:{:>23,.8f} DST\n\n{:>11}:{:>23,} DST\n\n{:>11}:{:>27}```'.format(
         #     'Spendable', _walletinfo.balance, 'Stake', _walletinfo.stake, 'Total',
@@ -616,7 +617,7 @@ async def help(ctx):
                   '2. ?allrewards <pageno>\n All total rewards:\n - ?allrewards\n - ?allrewards 1',
                   '3. ?dailyrewards <pageno>\n Daily total rewards:\n - ?dailyrewards\n - ?dailyrewards 1',
                   '4. ?myrewards <@user> <pageno>\n User\'s daily rewards:\n - ?myrewards\n - ?myrewards 1\n - ?myrewards @xxxx\n - ?myrewards @xxxx 1',
-                  '5. ?mywalletinfo\n WalletInfo',
+                  '5. ?walletinfo\n WalletInfo',
                   '6. ?txs\n All Wallet Transactions',
                   '7. ?profile\n User Profile'
                   ]

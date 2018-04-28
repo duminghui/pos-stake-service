@@ -9,10 +9,11 @@ USE posservice;
 GRANT SELECT, INSERT, UPDATE, DELETE ON posservice.* TO 'posservice'@'%' IDENTIFIED BY 'posservice';
 
 
-CREATE TABLE dst_wallet_balance (
+CREATE TABLE dst_wallet_info (
   `id`            BIGINT      NOT NULL,
   `balance`       REAL(16,8)  NOT NULL,
   `stake`         REAL(16,8)  NOT NULL,
+  `blocks`        BIGINT      NOT NULL,
   `update_at`     BIGINT      NOT NULL,
   `update_at_str` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`id`)

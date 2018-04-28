@@ -78,7 +78,7 @@ async def get_immature_amount():
 
 
 async def wallet_info():
-    _wallet_info = await DstWalletBalance.find(1)
+    _wallet_info = await DstWalletInfo.find(1)
     return _wallet_info
 
 
