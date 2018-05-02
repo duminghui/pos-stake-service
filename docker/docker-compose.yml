@@ -12,7 +12,7 @@ services:
             - ../src:/code
             - ../run-data/wallet-data-dst:/root/.dstra
             - ../run-data/wallet-data-traw:/root/.traw
-        command: tail -f /root/.bashrc
+        tty: true
         depends_on:
             - pos-mysql
         networks:

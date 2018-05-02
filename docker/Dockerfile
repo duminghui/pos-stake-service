@@ -36,6 +36,7 @@ RUN \
  apt-get -y autoremove && \
  apt-get clean && \
  echo 'alias dst=/root/dstrad' >> /root/.bashrc
+CMD ["bash"]
 
 
 FROM base as tmp
