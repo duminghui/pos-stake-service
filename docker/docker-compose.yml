@@ -2,11 +2,12 @@ version: '3.6'
 
 services:
     pos-service:
-        image: pos-service:v1
-        container_name: pos-service
+        image: pos-service
         build:
             context: .
             target: tmp
+        container_name: pos-service
+        hostname: pos-service
         volumes:
             - ../src:/code
             - ../run-data/wallet-data-dst:/root/.dstra
@@ -18,13 +19,12 @@ services:
           - pos-service-network
 
     pos-mysql:
-        image: pos-mysql:v1
-        container_name: pos-mysql
+        image: pos-mysql
         build:
           context: .
           dockerfile: Dockerfile-mysql
-        expose:
-            - "3306"
+        container_name: pos-mysql
+        hostname: pos-mysql
         ports:
             - "127.0.0.1:3306:3306"
         volumes:
