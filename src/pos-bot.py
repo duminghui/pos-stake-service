@@ -196,6 +196,24 @@ def _log(ctx, command, **kw):
 
 
 @bot.command()
+async def checkrewards(ctx):
+    _log(ctx, 'checkrewards')
+
+    embed = discord.Embed(
+        title='Check Rewards',
+        timestamp=datetime.datetime.utcfromtimestamp(time.time()),
+        colour=discord.Colour(0x00FF00))
+    embed.set_footer(text='Last Update:')
+    all_rewards_daily = await dstuserdata.get_all_rewards_form_daily()
+    all_rewards_txs = await  dstuserdata.get_all_rewards_from_txs()
+    dst_template = '{:,} DST'
+
+    embed.add_field(name='All Daily Rewards:', value=dst_template.format(all_rewards_daily), inline=True)
+    embed.add_field(name='All TX Rewards:', value=dst_template.format(all_rewards_txs), inline=True)
+    await ctx.send(embed=embed)
+
+
+@bot.command()
 async def profile(ctx, user=None):
     _log(ctx, 'profile', user=user)
     _userid = None

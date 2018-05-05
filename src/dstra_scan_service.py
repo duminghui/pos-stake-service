@@ -901,7 +901,7 @@ async def __daily_pos_profit_job():
         step_pos_profit = Decimal(str(step_pos_profit))
 
         # 获取当前处理时间段最老的未成熟币的tx时间
-        oldest_immature_tx = await DstTransactions.findAll()
+        # oldest_immature_tx = await DstTransactions.findAll()
 
         # 取出统计时间前的最近的股份分配的pos_time
         lately_stake = await DstInOutStake.findAll('`pos_time`<?', [daily_profit_start_time],
@@ -931,7 +931,7 @@ async def __daily_pos_profit_job():
                                                                        limit=1)
 
             user_daily_profit_last_item_len = len(user_daily_profit_last_item)
-            if len(user_daily_profit_last_item):
+            if user_daily_profit_last_item_len:
                 user_daily_profit_last_item = user_daily_profit_last_item[0]
                 user_all_pos_profit_last = Decimal(str(user_daily_profit_last_item.all_pos_profit))
                 if user_daily_profit_last_item.dailyflag == dailyflag:
@@ -1019,3 +1019,6 @@ async def __daily_pos_profit_job():
         # count += 1
         # if count == 9:
         #     break
+
+async def __daily_pos_profit_job2():
+    pass

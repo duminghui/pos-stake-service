@@ -9,6 +9,25 @@ from config import *
 import re
 
 
+async def get_all_rewards_form_daily():
+    pass
+    all_rewards = await DstDailyProfit.findFields('sum(daily_profit) as daily_profit', 'isdailynode=?', [1])
+    if all_rewards:
+        return all_rewards[0].daily_profit
+    else:
+        return 0
+
+
+async def get_all_rewards_from_txs():
+    pass
+    all_rewards = await DstTransactions.findFields('sum(amount) as amount', 'category=? or category=? or category=?',
+                                             ['immature', 'generate', 'sendtoself'])
+    if all_rewards:
+        return all_rewards[0].amount
+    else:
+        return 0
+
+
 async def get_user_in_out_tx(userid, count=10):
     user_txs = await DstInOutStake.findAll('userid=? and isonchain=?', [userid, 1], orderBy='txtime desc', limit=count)
     return user_txs
