@@ -354,12 +354,16 @@ async def __process_staking_info(txid):
                                  staking_time=staking_time, staking_time_str=get_gmt_time_yyyymmddhhmmss(staking_time),
                                  wait_time=wait_time, wait_time_str=wait_time_str)
 
-        unspent_dbs = await DstStakingInfo.findAll('vin_txid=? and vin_vout=?', [txid, vin_vout])
+        unspent_dbs = await DstStakingInfo.findAll('vin_txid=? and vin_vout=?', [vin_tx_id, vin_vout])
         if len(unspent_dbs) == 1:
             # 出现这种情况是由于冲突引起的
-            await unspent.update()
-        else:
-            await unspent.save()
+            conflicted_tx = unspent_dbs[0]
+            logging.info(
+                "######:conflicted: txid:{}, vin_txid:{}, vin_vout:{}".format(conflicted_tx.txid, vin_tx_id, vin_vout))
+            await conflicted_tx.remove()
+            # await unspent.update()
+        # else:
+        await unspent.save()
 
 
 async def __scan_transactions_job2():
@@ -1019,6 +1023,7 @@ async def __daily_pos_profit_job():
         # count += 1
         # if count == 9:
         #     break
+
 
 async def __daily_pos_profit_job2():
     pass
