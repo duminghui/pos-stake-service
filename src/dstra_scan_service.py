@@ -120,64 +120,70 @@ async def __claim_tx_test():
                                       userid='401916285929127947', username='Parker Lee')
 
 
-async def __claim_tx():
-    # dumh 12319.44493000
-    await DstInOutStake.updateByWhere('txid=?', ['d1a22903ea81ffaa0dfd1ef7e3878216c662a6587e14f06ef6ae49d0a2ba5f50'],
-                                      userid='404504209241669642', username='dumh')
-    # 村长 10500.00000000
-    await DstInOutStake.updateByWhere('txid=?', ['73e9b4762f2167b185ade4a4b0f41e318825f4bb0cbc2b10c0a55f78b327331e'],
-                                      userid='402631387577974797', username='stevenwong2017')
-    # 村长 39.00000000
-    await DstInOutStake.updateByWhere('txid=?', ['17094b0375339fe17ff6df4100bc3aba1c149d7bc16445163885799b0979f0d1'],
-                                      userid='402631387577974797', username='stevenwong2017')
-    # Parker Lee 4333.59000000
-    await DstInOutStake.updateByWhere('txid=?', ['5c0ba1ea313d5327108598d1e554a7d9c737f80809a6c5b27a6095a529420e97'],
-                                      userid='401916285929127947', username='Parker Lee')
-    # mako jr 7396.00000000
-    await DstInOutStake.updateByWhere('txid=?', ['41b9edb5db88d9d7b0081108e4f05b20c1fd048d0e0143f03a724df72bc3d9d8'],
-                                      userid='396837819550662668', username='mako jr')
-    # dumh 1178.57100000
-    await DstInOutStake.updateByWhere('txid=?', ['56dc4454e6710aa71184b6456e7e7e0e44fb982e6a9469596289d78bd47901a1'],
-                                      userid='404504209241669642', username='dumh')
-    # cat Imao 7883.58000000
-    await DstInOutStake.updateByWhere('txid=?', ['e9bc6891041464c2a66531116ec90cc75a9122bb07b2f2a3a1d848ed5ca033d8'],
-                                      userid='411932460344016896', username='cat Imao')
-    # lucky168 649.00000000
-    await DstInOutStake.updateByWhere('txid=?', ['9795560b3281f1151acc64596a534912f6c79248c032932204c2809f38abd751'],
-                                      userid='407552893806182411', username='lucky168')
-    # baobao 649.00000000
-    await DstInOutStake.updateByWhere('txid=?', ['56883f7dd4325c5c54e200e62ea6b5a79ff41319a81a15fb65ca5d303475e679'],
-                                      userid='403478549379678211', username='baobao')
-    # Parker Lee 15.00000000
-    await DstInOutStake.updateByWhere('txid=?', ['68cdcae5f26a94c2d2ab4502740ba411b37c82263014a46716c4a0696675e019'],
-                                      userid='401916285929127947', username='Parker Lee')
-    # JWKY 1000.00000000
-    await DstInOutStake.updateByWhere('txid=?', ['b47aae02d249fe4308e70c3a41ab787c7cc49f821e5e619fadbdf4c6dd0c06e7'],
-                                      userid='403341228176965633', username='JWKY')
-    # dumh 2.00000000
-    await DstInOutStake.updateByWhere('txid=?', ['4679e8a31331144ebd3bf50e80453a741eaf5c560571e103790a4b6d4488526f'],
-                                      userid='404504209241669642', username='dumh')
-    # dumh 10.00000000
-    await DstInOutStake.updateByWhere('txid=?', ['1210c38c31b53dd6923ffe35b9a7ab9ce40cee83564d3ac5568b9771e0202fd6'],
-                                      userid='404504209241669642', username='dumh')
-    # dumh ﻿1902.137903
-    await DstInOutStake.updateByWhere('txid=?', ['ae515f8d3829f7f4632519362285e961b7825c10885771fdc0f4922b5c706bef'],
-                                      userid='404504209241669642', username='dumh')
-    # Parker Lee ﻿431.3013
-    await DstInOutStake.updateByWhere('txid=?', ['43c326304210a4a7e59a72ecb9a3bca5ad86d5b757e3c4a1d9b76fabb44851d8'],
-                                      userid='401916285929127947', username='Parker Lee')
-    # mako jr ﻿2946.00
-    await DstInOutStake.updateByWhere('txid=?', ['6a2c17e7322f8609cb209252d134ab153a43f0126645a08282f94ba45e1b7372'],
-                                      userid='396837819550662668', username='mako jr')
-    # cat Imao 1194.108679
-    await DstInOutStake.updateByWhere('txid=?', ['c7feaeb850fdfb409a2f9246cc74a7a0c67de1d80e7801861ed6664d4118128f'],
-                                      userid='411932460344016896', username='cat Imao')
+claim_txs = [
+    # 12319.44493000
+    ['d1a22903ea81ffaa0dfd1ef7e3878216c662a6587e14f06ef6ae49d0a2ba5f50', '404504209241669642', 'dumh'],
+    # 1178.57100000
+    ['56dc4454e6710aa71184b6456e7e7e0e44fb982e6a9469596289d78bd47901a1', '404504209241669642', 'dumh'],
+    # 2.00000000
+    ['4679e8a31331144ebd3bf50e80453a741eaf5c560571e103790a4b6d4488526f', '404504209241669642', 'dumh'],
+    # 10.00000000
+    ['1210c38c31b53dd6923ffe35b9a7ab9ce40cee83564d3ac5568b9771e0202fd6', '404504209241669642', 'dumh'],
+    # 1902.137903
+    ['ae515f8d3829f7f4632519362285e961b7825c10885771fdc0f4922b5c706bef', '404504209241669642', 'dumh'],
+    # 2
+    ['69ad4f59ed1ebddf06a0a9567e1b089a6136efb568e9ed8a1b7f8bad7dde9dc4', '404504209241669642', 'dumh'],
+    # 1695.61
+    ['8205e4c68713aa2e1d7c84ec918357e7bf5942ed76c54002cca6d7ce3e075802', '404504209241669642', 'dumh'],
+
+    # '10500.00000000'
+    ['73e9b4762f2167b185ade4a4b0f41e318825f4bb0cbc2b10c0a55f78b327331e', '402631387577974797', 'stevenwong2017'],
+    # '39.00000000'
+    ['17094b0375339fe17ff6df4100bc3aba1c149d7bc16445163885799b0979f0d1', '402631387577974797', 'stevenwong2017'],
+
+    # 4333.59000000
+    ['5c0ba1ea313d5327108598d1e554a7d9c737f80809a6c5b27a6095a529420e97', '401916285929127947', 'Parker Lee'],
+    # 15.00000000
+    ['68cdcae5f26a94c2d2ab4502740ba411b37c82263014a46716c4a0696675e019', '401916285929127947', 'Parker Lee'],
+    # 431.3013
+    ['43c326304210a4a7e59a72ecb9a3bca5ad86d5b757e3c4a1d9b76fabb44851d8', '401916285929127947', 'Parker Lee'],
+
+    # '7396.00000000'
+    ['41b9edb5db88d9d7b0081108e4f05b20c1fd048d0e0143f03a724df72bc3d9d8', '396837819550662668', 'mako jr',
+     '7396.00000000'],
+    # '2946.00'
+    ['6a2c17e7322f8609cb209252d134ab153a43f0126645a08282f94ba45e1b7372', '396837819550662668', 'mako jr',
+     '2946.00'],
+
+    # '7883.58000000'
+    ['e9bc6891041464c2a66531116ec90cc75a9122bb07b2f2a3a1d848ed5ca033d8', '411932460344016896', 'cat Imao'],
+    # 1194.108679
+    ['c7feaeb850fdfb409a2f9246cc74a7a0c67de1d80e7801861ed6664d4118128f', '411932460344016896', 'cat Imao'],
+
+    # '649.00000000'
+    ['9795560b3281f1151acc64596a534912f6c79248c032932204c2809f38abd751', '407552893806182411', 'lucky168'],
     # lucky168 1200.00000000
-    await DstInOutStake.updateByWhere('txid=?', ['1e9eb0a9f1def2068b120b8d35b3e565ed9011a5574b39253098823bfa4050b5'],
-                                      userid='407552893806182411', username='lucky168')
+    ['1e9eb0a9f1def2068b120b8d35b3e565ed9011a5574b39253098823bfa4050b5', '407552893806182411', 'lucky168'],
+
+    # '649.00000000'
+    ['56883f7dd4325c5c54e200e62ea6b5a79ff41319a81a15fb65ca5d303475e679', '403478549379678211', 'baobao'],
     # baobao 2000.00000000
-    await DstInOutStake.updateByWhere('txid=?', ['77882a1d20a342dbd714ee0f4fd4764fc915ebbc2c1edaaa2d2b22908ce86c15'],
-                                      userid='403478549379678211', username='baobao')
+    ['77882a1d20a342dbd714ee0f4fd4764fc915ebbc2c1edaaa2d2b22908ce86c15', '403478549379678211', 'baobao'],
+    # baobao -2880 ﻿5af46fe0d6602074f6b960851a4b54351fa076651d7a96ad0b014e77bf342018
+    ['5af46fe0d6602074f6b960851a4b54351fa076651d7a96ad0b014e77bf342018', '403478549379678211', 'baobao'],
+
+    # JWKY '1000.00000000'
+    ['b47aae02d249fe4308e70c3a41ab787c7cc49f821e5e619fadbdf4c6dd0c06e7', '403341228176965633', 'JWKY'],
+
+    # Ray '8363.6129351'
+    ['6494c6df7c2b975c2a59973b16397de0a0f173bedaf26669ce71ffaf3f79029c', '385061500034875392', 'Ray'],
+]
+
+
+async def __claim_tx():
+    global claim_txs
+    for tx in claim_txs:
+        await DstInOutStake.updateByWhere('txid=?', [tx[0]], userid=tx[1], username=tx[2])
 
 
 async def __scan_balance_job():
@@ -341,8 +347,8 @@ async def __process_staking_info(txid):
         vin_tx_id = vin['txid']
         vin_vout = vin['vout']
         tx_vin = dstracmd.gettransaction(vin_tx_id)
-        tx_vin_time = tx_vin.time
-        staking_time = tx_detail.time
+        tx_vin_time = tx_vin.blocktime
+        staking_time = tx_detail.blocktime
         wait_time = staking_time - tx_vin_time
         tx_vin_time_d = dt.datetime.utcfromtimestamp(tx_vin_time)
         staking_time_d = dt.datetime.utcfromtimestamp(staking_time)
@@ -367,38 +373,44 @@ async def __process_staking_info(txid):
 
 
 async def __scan_transactions_job2():
-    last_process_txid = ''
+    last_db_tx = None
     transactions = await DstTransactions.findAll(orderBy="txtime DESC", limit=1)
     if len(transactions) != 0:
-        last_process_txid = transactions[0].txid
-    if last_process_txid == '':
-        start_index, count = __get_index_count_by_txid(last_process_txid)
+        last_db_tx = transactions[0]
+    if last_db_tx is None:
+        start_index, count = __get_index_count_by_txid('')
         # oldest transaction
-        last_tx = dstracmd.listtransactions(1, count - 1)[0]
-        logging.info('oldest_txid:{}'.format(last_tx.txid))
+        last_chain_tx = dstracmd.listtransactions(1, count - 1)[0]
+        logging.info('oldest_txid:{}'.format(last_chain_tx.txid))
         # the oldest write to db
-        txtime = last_tx.time
-        if last_tx.txid in const.POS_EFFECTIVE_AT_ONCE_TXID:
-            pos_time = last_tx.time
+        txtime = last_chain_tx.blocktime
+        if last_chain_tx.txid in const.POS_EFFECTIVE_AT_ONCE_TXID:
+            pos_time = txtime
         else:
-            pos_time = last_tx.time + const.POS_EFFECTIVE_TIME
-        await DstInOutStake(change_amount=last_tx.amount, txid=last_tx.txid,
+            pos_time = txtime + const.POS_EFFECTIVE_TIME
+        await DstInOutStake(change_amount=last_chain_tx.amount, txid=last_chain_tx.txid,
                             txtime=txtime,
                             txtime_str=get_gmt_time_yyyymmddhhmmss(txtime),
                             pos_time=pos_time,
                             pos_time_str=get_gmt_time_yyyymmddhhmmss(pos_time),
                             isprocess=False, isonchain=True,
-                            change_username='', comment='add coin').save()
-        await DstTransactions(txid=last_tx.txid, idx=0, category=last_tx.category, amount=last_tx.amount,
-                              txtime=txtime,
-                              txtime_str=get_gmt_time_yyyymmddhhmmss(txtime)).save()
-        last_process_txid = last_tx.txid
+                            change_username='', comment='deposit coin').save()
+        last_db_tx = DstTransactions(txid=last_chain_tx.txid, idx=0, category=last_chain_tx.category,
+                                     amount=last_chain_tx.amount,
+                                     txtime=txtime,
+                                     txtime_str=get_gmt_time_yyyymmddhhmmss(txtime))
+        await last_db_tx.save()
+        # await DstTransactions(txid=last_chain_tx.txid, idx=0, category=last_chain_tx.category,
+        #                       amount=last_chain_tx.amount,
+        #                       txtime=txtime,
+        #                       txtime_str=get_gmt_time_yyyymmddhhmmss(txtime)).save()
+        # last_process_txid = last_chain_tx.txid
 
     step = 50
     final_page = False
     while not final_page:
-        logging.info('### last_process_txid:{}'.format(last_process_txid))
-        start_index, count = __get_index_count_by_txid(last_process_txid)
+        logging.info('### last_process_txid:{}'.format(last_db_tx.txid))
+        start_index, count = __get_index_count_by_txid(last_db_tx.txid)
         logging.info("### fix before:start_index:{},count,{}".format(start_index, count))
         # if count == 0 or start_index == 0:
         if count == 0:
@@ -434,43 +446,47 @@ async def __scan_transactions_job2():
             for index, t in enumerate(txs):
                 __log_tx(start_index + txs_count - index - 1, t)
 
-        last_tx = txs[0]
-        if last_process_txid != last_tx.txid:
-            raise Exception("tx chain error: last:[%s], chain first:[%s]" % (last_process_txid, last_tx.txid))
+        last_chain_tx = txs[0]
+        if last_db_tx.txid != last_chain_tx.txid:
+            raise Exception("tx chain error: last:[%s], chain first:[%s]" % (last_db_tx.txid, last_chain_tx.txid))
 
         tx_ids = []
         for index, tx in enumerate(txs[1:], 1):
             tx_id = tx.txid
             if tx_id in tx_ids:
                 continue
-            last_process_txid = tx_id
             tx_ids.append(tx_id)
             idx = count - (start_index + txs_count) + index
-            tx_db = DstTransactions(txid=tx_id, idx=idx, category=tx.category, amount=tx.amount, txtime=tx.time,
-                                    txtime_str=get_gmt_time_yyyymmddhhmmss(tx.time))
+            txtime = tx.blocktime
+            # 修正两个txtime一样引起的算占比时的错误
+            if txtime == last_db_tx.txtime:
+                txtime += 1
+            last_db_tx = DstTransactions(txid=tx_id, idx=idx, category=tx.category, amount=tx.amount, txtime=txtime,
+                                         txtime_str=get_gmt_time_yyyymmddhhmmss(txtime))
             if tx.category == 'generate' or tx.category == 'immature':
                 # await tx_db.save()
                 await __process_staking_info(tx_id)
-                pass
             elif tx.txid in const.POS_RECEIVE_2_GENERATE:
-                tx_db.category = 'generate'
+                last_db_tx.category = 'generate'
             else:
                 tx_in_chain = dstracmd.gettransaction(tx.txid)
                 tx_amount = tx_in_chain.amount
                 tx_fee = tx_in_chain.get('fee')
                 if tx_fee is None or tx_amount < 0:
                     # 如果不包含fee就是从别人那里收到的, 如果amount<0是发出去的, 也要要记录占比
-                    txtime = tx.time
                     if tx_amount < 0:
-                        tx_db.category = 'send'
+                        last_db_tx.category = 'send'
                         tx_amount = Decimal(str(tx_amount)) + Decimal(str(tx_fee))
+                        last_db_tx.amount = tx_amount
                         pos_time = txtime
+                        comment = 'withdraw coin'
                     else:
-                        tx_db.category = 'receive'
+                        last_db_tx.category = 'receive'
                         if tx_id in const.POS_EFFECTIVE_AT_ONCE_TXID:
                             pos_time = txtime
                         else:
                             pos_time = txtime + const.POS_EFFECTIVE_TIME
+                        comment = 'deposit coin'
 
                     await DstInOutStake(change_amount=tx_amount, txid=tx_id,
                                         txtime=txtime,
@@ -478,151 +494,12 @@ async def __scan_transactions_job2():
                                         pos_time=pos_time,
                                         pos_time_str=get_gmt_time_yyyymmddhhmmss(pos_time),
                                         isprocess=False, isonchain=True, change_username='',
-                                        comment='add coin').save()
+                                        comment=comment).save()
                 elif tx_amount == 0:
                     # 这种是split时产生的费用
-                    tx_db.amount = tx_fee
-                    tx_db.category = 'sendtoself'
-            await tx_db.save()
-
-
-async def __scan_transactions_job():
-    last_process_txid = ''
-    transactions = await DstTransactions.findAll(orderBy="txtime DESC", limit=1)
-    if len(transactions) != 0:
-        last_process_txid = transactions[0].txid
-    # 每次读100个,处理98个,第一个做为是否接上一批链的判断, 最后一个做为是否发给自己的预留验证
-    step = 50
-    step_process_count = step - 1
-    final_page = False
-    while not final_page:
-        print("last_process_txid:%s" % last_process_txid)
-        start_index, count = __get_index_count_by_txid(last_process_txid)
-        print('#1', 'start_index', start_index, 'count', count)
-        if count == 0 or start_index == 0:
-            return
-        if start_index == -1:
-            # 最开始从最后面的处理
-            start_index = count - step
-        else:
-            # 中间处理的加上上一批次最后处理的, 用于检验是否完整的链
-            start_index -= (step - 1)
-        if start_index < 0:
-            # 最新页的处理方式
-            step += start_index
-            start_index = 0
-            final_page = True
-        #
-        txs = dstracmd.listtransactions(step, start_index)
-        print('#2', 'step', step, 'start_index', start_index, 'len(txs)', len(txs), 'count', count)
-        txs_count = len(txs)
-        if txs_count > 6:
-            tmp_t = txs[0]
-            print('%3d' % (start_index + txs_count - 1), tmp_t.txid, tmp_t.amount, tmp_t.category)
-            tmp_t = txs[1]
-            print('%3d' % (start_index + txs_count - 2), tmp_t.txid, tmp_t.amount, tmp_t.category)
-            tmp_t = txs[2]
-            print('%3d' % (start_index + txs_count - 3), tmp_t.txid, tmp_t.amount, tmp_t.category)
-            print('...............')
-            tmp_t = txs[txs_count - 3]
-            print('%3d' % (start_index + 2), tmp_t.txid, tmp_t.amount, tmp_t.category)
-            tmp_t = txs[txs_count - 2]
-            print('%3d' % (start_index + 1), tmp_t.txid, tmp_t.amount, tmp_t.category)
-            tmp_t = txs[txs_count - 1]
-            print('%3d' % start_index, tmp_t.txid, tmp_t.amount, tmp_t.category)
-        else:
-            tmp_index = 0
-            for t in txs:
-                tmp_index += 1
-                print('%3d' % (start_index + txs_count - tmp_index), t.txid, t.amount, t.category)
-
-        process_count = 0
-        for t in txs:
-            process_count += 1
-            # print("####", process_count, last_process_txid, t.txid)
-            idx = count - (start_index + txs_count) + process_count - 1
-            if process_count == 1:
-                if last_process_txid != '' and t.txid != last_process_txid:
-                    raise Exception("tx chain error: last:[%s], chain first:[%s]" % (last_process_txid, t.txid))
-                elif last_process_txid == '':
-                    # 链中第一条记录要添加进去
-                    txtime = t.time
-                    if t.txid in const.POS_EFFECTIVE_AT_ONCE_TXID:
-                        pos_time = t.time
-                    else:
-                        pos_time = t.time + const.POS_EFFECTIVE_TIME
-                    await DstInOutStake(change_amount=t.amount, txid=t.txid,
-                                        txtime=txtime,
-                                        txtime_str=get_gmt_time_yyyymmddhhmmss(txtime),
-                                        pos_time=pos_time,
-                                        pos_time_str=get_gmt_time_yyyymmddhhmmss(pos_time),
-                                        isprocess=False, isonchain=True,
-                                        change_username='', comment='add coin').save()
-                    # await dstinout.save()
-                    await DstTransactions(txid=t.txid, idx=idx, category=t.category, amount=t.amount,
-                                          txtime=t.time,
-                                          txtime_str=get_gmt_time_yyyymmddhhmmss(t.time)).save()
-                    # await tx_db.save()
-            else:
-                tx_db = DstTransactions(txid=t.txid, idx=idx, category=t.category, amount=t.amount, txtime=t.time,
-                                        txtime_str=get_gmt_time_yyyymmddhhmmss(t.time))
-                if t.category == 'generate' or t.category == 'immature':
-                    # if t.confirmations > const.POS_NO_CONFLICTED_CONFIRMATIONS:
-                    #     tx_db.category = 'generate'
-                    await tx_db.save()
-                    tx_detail = dstracmd.gettransaction(t.txid)
-                    if len(tx_detail.vin) > 1:
-                        print(t.txid)
-
-                elif t.category == 'receive' and last_process_txid != t.txid:
-                    if process_count == txs_count:
-                        # 这种情况只会出现在最新页里
-                        txtime = t.time
-                        if t.txid in const.POS_EFFECTIVE_AT_ONCE_TXID:
-                            pos_time = txtime
-                        else:
-                            pos_time = txtime + const.POS_EFFECTIVE_TIME
-                        await DstInOutStake(change_amount=t.amount, txid=t.txid,
-                                            txtime=txtime,
-                                            txtime_str=get_gmt_time_yyyymmddhhmmss(txtime),
-                                            pos_time=pos_time,
-                                            pos_time_str=get_gmt_time_yyyymmddhhmmss(pos_time),
-                                            isprocess=False, isonchain=True, change_username='',
-                                            comment='add coin').save()
-                    # elif t.txid == txs[process_count].txid or t.txid == 'b519f12a36bc48cf1a6753a1de23693de79c0cc762a201324875e6f53eba2b52':
-                    elif t.txid == txs[process_count].txid:
-                        tx_detail = dstracmd.gettransaction(t.txid)
-                        tx_db.category = 'sendtoself'
-                        tx_db.amount = tx_detail.fee
-                        print("######### fee", tx_db.amount)
-                    else:
-                        if t.txid in const.POS_RECEIVE_2_GENERATE:
-                            tx_db.category = 'generate'
-                        else:
-                            txtime = t.time
-                            if t.txid in const.POS_EFFECTIVE_AT_ONCE_TXID:
-                                pos_time = txtime
-                            else:
-                                pos_time = txtime + const.POS_EFFECTIVE_TIME
-                            await DstInOutStake(change_amount=t.amount, txid=t.txid,
-                                                txtime=txtime,
-                                                txtime_str=get_gmt_time_yyyymmddhhmmss(txtime),
-                                                pos_time=pos_time,
-                                                pos_time_str=get_gmt_time_yyyymmddhhmmss(pos_time),
-                                                isprocess=False, isonchain=True, change_username='',
-                                                comment='add coin').save()
-                            # await dstinout.save()
-                    await tx_db.save()
-
-                last_process_txid = t.txid
-
-                #  中间轮不处理最后一条,最后一条只是用来做判断.
-                if not final_page and process_count == step_process_count:
-                    break
-        # break
-        # i = i + 1
-        # if i == 4:
-        #     break
+                    last_db_tx.amount = tx_fee
+                    last_db_tx.category = 'sendtoself'
+            await last_db_tx.save()
 
 
 async def __total_stakes_job():
@@ -784,19 +661,25 @@ async def __total_stakes_job():
                 fix_amount = 0
 
             logging.info('[%s]前一条股份记录:股份:%s, 开始数额:%s' % (username, prev_stake, prev_start_amount))
+            comment_flag = 'deposit'
+            if change_amount < 0:
+                comment_flag = 'withdraw'
+
             if userid == current_tx_userid:
                 # 计算用户在这条记录上开始的数额,
                 new_start_amount = prev_start_amount + change_amount + pos_profit
                 # 计算用户在这条记录上所占的股份比
+                comment_template = '{} coin{}'
                 if user_index == user_count:
                     new_stake = Decimal(1) - processed_sum_stake
                     fix_stake = new_stake - (new_start_amount / mature_balance).__round__(const.PREC_STAKE)
-                    comment = 'Add coin, fix stake:%s, fix amount:%s' % (fix_stake, fix_amount)
+                    comment = comment_template.format(comment_flag,
+                                                      ', fix stake:{}, fix amount:{}'.format(fix_stake, fix_amount))
                 else:
                     new_stake = (new_start_amount / mature_balance).__round__(const.PREC_STAKE)
                     processed_sum_stake += new_stake
                     fix_stake = 0
-                    comment = 'Add coin'
+                    comment = comment_flag.format(comment_flag, '')
                 logging.info(
                     'c[%s]新股份记录:开始数据:%s, 股份:%s, PoS利息:%s' % (username, new_start_amount, new_stake, pos_profit))
                 tx.stake = new_stake
@@ -814,16 +697,17 @@ async def __total_stakes_job():
                 # 其他用户的计算
                 pos_time_str = tx.pos_time_str
                 new_start_amount = prev_start_amount + pos_profit
+                comment_template = 'other {} coin{}'
                 if user_index == user_count:
                     new_stake = Decimal(1) - processed_sum_stake
                     fix_stake = new_stake - (new_start_amount / mature_balance).__round__(const.PREC_STAKE)
-                    comment = 'other add coin, add pos profit, fix stake:%s, fix amount:%s' % (
-                        fix_stake, fix_amount)
+                    comment = comment_template.format(comment_flag,
+                                                      ', fix stake:{}, fix amount:{}'.format(fix_stake, fix_amount))
                 else:
                     new_stake = (new_start_amount / mature_balance).__round__(const.PREC_STAKE)
                     processed_sum_stake += new_stake
-                    fix_stake = Decimal(0)
-                    comment = 'other add coin, add pos profit'
+                    fix_stake = 0
+                    comment = comment_template.format(comment_flag, '')
 
                 logging.info('o[%s]新股份记录:开始数据:%s, 股份:%s, PoS利息:%s' % (username, new_start_amount,
                                                                       new_stake, pos_profit))
@@ -985,6 +869,9 @@ async def __daily_pos_profit_job():
                 user_injection = await DstInOutStake.findNumber('sum(`change_amount`)',
                                                                 'pos_time<=? and userid=? and isonchain=1',
                                                                 [user.pos_time, userid])
+                if user_injection < 0:
+                    user_all_pos_profit += Decimal(str(user_injection))
+                    user_injection = 0
 
                 #  daily_profit  all_pos_profilt isdailynode
                 user_daily_profit_item = DstDailyProfit(userid=userid, username=user.username,

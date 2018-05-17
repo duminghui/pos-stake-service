@@ -53,6 +53,8 @@ INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('41193246
 INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('407552893806182411','lucky168',0,'1970-1-1 00:00:00');
 INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('403478549379678211','baobao',0,'1970-1-1 00:00:00');
 INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('403341228176965633','JWKY',0,'1970-1-1 00:00:00');
+INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('385061500034875392','RAY',0,'1970-1-1 00:00:00');
+
 
 CREATE TABLE dst_in_out_stake (
   `id`                  VARCHAR(50)   NOT NULL,

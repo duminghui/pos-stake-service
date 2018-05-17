@@ -228,28 +228,40 @@ async def profile(ctx, user=None):
     _userid = _user.id
     _username = _user.name
     _daily_profit = await dstuserdata.user_dailies(_userid, 0, 1)
+    user_first_stake = await dstuserdata.user_first_stake(_userid)
+    if user_first_stake:
+        join_time = user_first_stake.txtime_str
+    else:
+        join_time = ''
+
+    in_out_txs = await dstuserdata.get_user_in_out_tx(_userid)
     if len(_daily_profit) == 0:
         stake = 0
         stake_time = ''
-        pos_rewards = 0
-        all_pos_rewards = 0
-        injection = 0
-        immature = 0
-        balance = 0
+        pos_rewards = 0.0
+        all_pos_rewards = 0.0
+        immature = await dstuserdata.get_user_immature_amount(_userid)
+        injection = immature
+        balance = immature
         timestamp = time.time()
-        join_time = ''
-        in_out_txs = []
+        # join_time = (await dstuserdata.user_first_stake(_userid)).txtime_str
     else:
         stake = _daily_profit[0].stake
         stake_time = utils.get_gmt_time_yyyymmddhhmmss(_daily_profit[0].pos_time)
         pos_rewards = _daily_profit[0].daily_profit
         all_pos_rewards = Decimal(str(_daily_profit[0].all_pos_profit))
         immature = Decimal(str(await dstuserdata.get_user_immature_amount(_userid)))
-        injection = (Decimal(str(_daily_profit[0].injection)) + immature).__round__(const.PREC_BALANCE)
-        balance = (all_pos_rewards + injection).__round__(const.PREC_BALANCE)
+        injection = float((Decimal(str(_daily_profit[0].injection)) + immature).__round__(const.PREC_BALANCE))
+        balance = (Decimal(
+            str(_daily_profit[0].start_amount + _daily_profit[0].stage_pos_profit)) + immature).__round__(
+            const.PREC_BALANCE)
+        all_pos_rewards = float(all_pos_rewards)
+        immature = float(immature)
+        injection = float(injection)
+        balance = float(balance)
         timestamp = _daily_profit[0].profit_time
-        join_time = (await dstuserdata.user_first_stake(_userid)).txtime_str
-        in_out_txs = await dstuserdata.get_user_in_out_tx(_userid)
+        # join_time = (await dstuserdata.user_first_stake(_userid)).txtime_str
+        # in_out_txs = await dstuserdata.get_user_in_out_tx(_userid)
 
     embed = discord.Embed(
         # title='{}\' Profile',
@@ -268,7 +280,7 @@ async def profile(ctx, user=None):
     if join_time != '':
         embed.add_field(name="Join time:", value=join_time, inline=False)
     if len(in_out_txs) > 0:
-        in_out_tx_template = '({:,} DST) [{}](https://iquidus.dstra.io/tx/{})'
+        in_out_tx_template = '({:,} DST) [{}](https://blocks.dstra.io/tx/{})'
         in_out_tx = ' | '.join(
             map(lambda tx: in_out_tx_template.format(tx.change_amount, tx.txid[:10], tx.txid),
                 in_out_txs))
@@ -342,7 +354,7 @@ async def claimtx(ctx, userid=None, txid=None):
         result_msg = 'Other ERROR'
 
     embed.add_field(name='Result:',
-                    value='{0} claim Tx [{1}](https://iquidus.dstra.io/tx/{1}) {2}'.format(
+                    value='{0} claim Tx [{1}](https://blocks.dstra.io/tx/{1}) {2}'.format(
                         userid, txid, result_msg))
     await ctx.send(embed=embed)
 
@@ -475,17 +487,22 @@ async def dailyrewards(ctx, pageno=None):
         if dailies_count == 0:
             return 0, '```MD\n```Total {} times'.format(dailies_count), None
 
-        __limit, __item_end, __pageno = get_start_end_pageno(pageno, dailies_count, const.PAGE_ITEM_COUNT)
+        __limit, __item_end, __pageno = get_start_end_pageno(pageno, dailies_count, const.PAGE_ITEM_COUNT + 5)
 
-        dailies_profit = await dstuserdata.dailies(__limit)
+        dailies_profit = await dstuserdata.dailies(__limit, const.PAGE_ITEM_COUNT + 5)
 
         # 'Daily Total rewards'
         # msg_single_template = '{}.{}\n  Daily total rewards:{:>19,.8f} DST'
-        msg_single_template = '{}. {}\n{:>19}:{:>21,.8f} DST\n{:>19}:{:>21,.8f} DST'
+        # msg_single_template = '{}. {}\n{:>19}:{:>21,.8f} DST\n{:>19}:{:>21,.8f} DST'
+
+        # msg = '\n'.join(map(
+        #     lambda x: msg_single_template.format(x[0] + __limit + 1, x[1].profit_time_str, 'Daily total rewards',
+        #                                          x[1].daily_profit, 'All injection', x[1].injection),
+        #     enumerate(dailies_profit)))
+        msg_single_template = '{}. {}\n{:>19}:{:>21,.8f} DST'
         msg = '\n'.join(map(
             lambda x: msg_single_template.format(x[0] + __limit + 1, x[1].profit_time_str, 'Daily total rewards',
-                                                 x[1].daily_profit, 'All injection', x[1].injection),
-            enumerate(dailies_profit)))
+                                                 x[1].daily_profit), enumerate(dailies_profit)))
 
         msg = '```MD\nDaily total PoS rewards ({}~{}, Total {} items)\n{}```'.format(__limit + 1,
                                                                                      __item_end, dailies_count, msg)
@@ -604,13 +621,13 @@ async def stake(ctx, user=None, pageno=1):
             if user_stake.isonchain:
                 msg_value_singale.append('{:>13}:{:>30}'.format('Change Reason', 'Injection DST'))
                 msg_value_singale.append('{:>13}:{:>30}'.format('TX', user_stake.txid[:20]))
-                msg_txs.append('[{}](https://iquidus.dstra.io/tx/{})'.format(user_stake.txid[:20], user_stake.txid))
+                msg_txs.append('[{}](http://blocks.dstra.io/tx/{})'.format(user_stake.txid[:20], user_stake.txid))
             else:
                 change_reason = '{} Injection DST'.format(user_stake.change_username)
                 msg_value_singale.append('{:>13}:{:>30}'.format('Change Reason', change_reason))
 
             msg_values.append('\n'.join(msg_value_singale))
-        # '[%s](https://iquidus.dstra.io/tx/%s)' % (user_stake.txid[:20], user_stake.txid)
+        # '[%s](https://blocks.dstra.io/tx/%s)' % (user_stake.txid[:20], user_stake.txid)
         msg_values.append('```')
         embed = discord.Embed(
             # title='{}\'s'.format(__username),
@@ -637,7 +654,8 @@ async def help(ctx):
                   '4. ?myrewards <@user> <pageno>\n User\'s daily rewards:\n - ?myrewards\n - ?myrewards 1\n - ?myrewards @xxxx\n - ?myrewards @xxxx 1',
                   '5. ?walletinfo\n WalletInfo',
                   '6. ?txs\n All Wallet Transactions',
-                  '7. ?profile\n User Profile'
+                  '7. ?profile\n User Profile',
+                  '8. ?claimtx\n - ?claimtx <@user> <txid>'
                   ]
     msg_content = '```MD\n{}```'.format('\n'.join(msg_values))
     await ctx.send(msg_content)
