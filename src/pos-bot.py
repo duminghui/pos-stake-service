@@ -235,33 +235,27 @@ async def profile(ctx, user=None):
         join_time = ''
 
     in_out_txs = await dstuserdata.get_user_in_out_tx(_userid)
+    deposit = await dstuserdata.get_user_deposit(_userid)
+    withdraw = await  dstuserdata.get_user_withdraw(_userid)
+    immature = await dstuserdata.get_user_immature_amount(_userid)
     if len(_daily_profit) == 0:
-        stake = 0
+        stake = 0.0
         stake_time = ''
         pos_rewards = 0.0
         all_pos_rewards = 0.0
-        immature = await dstuserdata.get_user_immature_amount(_userid)
-        injection = immature
+        staking = 0.0
         balance = immature
         timestamp = time.time()
-        # join_time = (await dstuserdata.user_first_stake(_userid)).txtime_str
     else:
         stake = _daily_profit[0].stake
         stake_time = utils.get_gmt_time_yyyymmddhhmmss(_daily_profit[0].pos_time)
         pos_rewards = _daily_profit[0].daily_profit
-        all_pos_rewards = Decimal(str(_daily_profit[0].all_pos_profit))
-        immature = Decimal(str(await dstuserdata.get_user_immature_amount(_userid)))
-        injection = float((Decimal(str(_daily_profit[0].injection)) + immature).__round__(const.PREC_BALANCE))
-        balance = (Decimal(
-            str(_daily_profit[0].start_amount + _daily_profit[0].stage_pos_profit)) + immature).__round__(
+        balance = (_daily_profit[0].start_amount + _daily_profit[0].stage_pos_profit + immature).__round__(
             const.PREC_BALANCE)
-        all_pos_rewards = float(all_pos_rewards)
-        immature = float(immature)
-        injection = float(injection)
+        all_pos_rewards = _daily_profit[0].all_pos_profit
+        staking = _daily_profit[0].start_amount
         balance = float(balance)
         timestamp = _daily_profit[0].profit_time
-        # join_time = (await dstuserdata.user_first_stake(_userid)).txtime_str
-        # in_out_txs = await dstuserdata.get_user_in_out_tx(_userid)
 
     embed = discord.Embed(
         # title='{}\' Profile',
@@ -272,8 +266,10 @@ async def profile(ctx, user=None):
     embed.set_author(name='{}\'s Profile'.format(_username), icon_url=_user.avatar_url)
     embed.add_field(name='Today PoS rewards:', value=dst_template.format(pos_rewards), inline=True)
     embed.add_field(name='All PoS rewards:', value=dst_template.format(all_pos_rewards), inline=True)
-    embed.add_field(name="Injection:", value=dst_template.format(injection), inline=True)
+    embed.add_field(name="Start staking:", value=dst_template.format(staking), inline=True)
     embed.add_field(name='Balance:', value=dst_template.format(balance), inline=True)
+    embed.add_field(name="Deposit:", value=dst_template.format(deposit), inline=True)
+    embed.add_field(name="Withdraw:", value=dst_template.format(withdraw), inline=True)
     embed.add_field(name='Immature:', value=dst_template.format(immature), inline=True)
     embed.add_field(name='Stake:(does not include immature)', value='{:}% ({})'.format(stake * 100, stake_time),
                     inline=False)
@@ -452,11 +448,11 @@ async def myrewards(ctx, user=None, pageno=1):
         # 'Total rewards'
         # 'Injection'
         # 'Stake'
-        msg_single_template = '{}. {}\n{:>15}:{:>19,.8f} DST\n{:>15}:{:>19,.8f} DST\n{:>15}:{:>19,.8f} DST\n{:>15}:{:>23.15%}'
+        msg_single_template = '{}. {}\n{:>15}:{:>19,.8f} DST\n{:>15}:{:>19,.8f} DST\n{:>15}:{:>23.15%}'
         msg_content = '\n'.join(map(
             lambda x: msg_single_template.format(x[0] + __limit + 1, x[1].profit_time_str, 'Daily rewards',
-                                                 x[1].daily_profit, 'Total rewards', x[1].all_pos_profit, 'Injection',
-                                                 x[1].injection, 'Stake', x[1].stake), enumerate(mydailies)))
+                                                 x[1].daily_profit, 'Total rewards', x[1].all_pos_profit, 'Stake',
+                                                 x[1].stake), enumerate(mydailies)))
         msg_content = '```MD\n{}\'s daily PoS rewards ({}~{}, total {} items)\n{}```'. \
             format(__username, __limit + 1, __item_end, mydailies_count, msg_content)
         return __pageno, msg_content, None
@@ -501,7 +497,7 @@ async def dailyrewards(ctx, pageno=None):
         #     enumerate(dailies_profit)))
         msg_single_template = '{}. {}\n{:>19}:{:>21,.8f} DST'
         msg = '\n'.join(map(
-            lambda x: msg_single_template.format(x[0] + __limit + 1, x[1].profit_time_str, 'Daily total rewards',
+            lambda x: msg_single_template.format(x[0] + __limit + 1, x[1].profit_time_str, 'Total rewards',
                                                  x[1].daily_profit), enumerate(dailies_profit)))
 
         msg = '```MD\nDaily total PoS rewards ({}~{}, Total {} items)\n{}```'.format(__limit + 1,
@@ -617,7 +613,7 @@ async def stake(ctx, user=None, pageno=1):
             # TX
             msg_value_singale = ['{:>13}:{:>30.15%}'.format('Stake', user_stake.stake),
                                  '{:>13}:{:>26,.08f} DST'.format('Change DST', user_stake.change_amount),
-                                 '{:>13}:{:>26,.08f} DST'.format('Start DST', user_stake.start_amount)]
+                                 '{:>13}:{:>26,.08f} DST'.format('Staking DST', user_stake.start_amount)]
             if user_stake.isonchain:
                 msg_value_singale.append('{:>13}:{:>30}'.format('Change Reason', 'Injection DST'))
                 msg_value_singale.append('{:>13}:{:>30}'.format('TX', user_stake.txid[:20]))

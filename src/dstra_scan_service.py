@@ -821,41 +821,27 @@ async def __daily_pos_profit_job():
             user_daily_profit_last_item_len = len(user_daily_profit_last_item)
             if user_daily_profit_last_item_len:
                 user_daily_profit_last_item = user_daily_profit_last_item[0]
-                user_all_pos_profit_last = Decimal(str(user_daily_profit_last_item.all_pos_profit))
+                # user_all_pos_profit_last = Decimal(str(user_daily_profit_last_item.all_pos_profit))
                 if user_daily_profit_last_item.dailyflag == dailyflag:
                     user_daily_profit_last = Decimal(str(user_daily_profit_last_item.daily_profit))
                 else:
                     user_daily_profit_last = Decimal(0)
             else:
-                user_all_pos_profit_last = Decimal(0)
+                # user_all_pos_profit_last = Decimal(0)
                 user_daily_profit_last = Decimal(0)
 
-            # # 用户当天已经存在的最新的记录
-            # user_daily_profit_last_item = await DstDailyProfit.findAll('dailyflag=? and userid=?', [dailyflag, userid],
-            #                                                            orderBy='profit_time desc', limit=1)
-            # user_daily_profit_last_len = len(user_daily_profit_last_item)
-            # if user_daily_profit_last_len:
-            #     user_daily_profit_last = Decimal(str(user_daily_profit_last_item[0].daily_profit))
-            # else:
-            #     user_daily_profit_last = Decimal(0)
-
-            # # user_daily_profit_exist = Decimal(str(user_daily_profit_exist))
-            # # 用户已经存在最后的记录
-            # user_all_pos_profit_last_time = await DstDailyProfit.findAll('userid=?', [userid],
-            #                                                              orderBy='profit_time desc',
-            #                                                              limit=1)
-            # if len(user_all_pos_profit_last):
-            #     user_all_pos_profit_last = Decimal(str(user_all_pos_profit_last[0].all_pos_profit))
-            # else:
-            #     user_all_pos_profit_last = Decimal(0)
-
-            # 获取户该阶段在profit表中的记录,根据pos_time来区分
-            # user_daily_profit_item = await DstDailyProfit.findAll('pos_time=? and dailyflag=? and userid=?',
-            #                                                       [user.pos_time, dailyflag, userid])
-            # 用户当天收益
+            # 用户当天收益 这块需要改进一下, 不要用加前一天的做法
             user_daily_profit = (user_daily_profit_last + user_step_pos_profit).__round__(8)
+
             # 用户总收益
-            user_all_pos_profit = (user_all_pos_profit_last + user_step_pos_profit).__round__(8)
+            # user_all_pos_profit = (user_all_pos_profit_last + user_step_pos_profit).__round__(8)
+            ## 用户除当前之前的每天收益和
+            prev_daily_rewards_sum = (await DstDailyProfit.findFields('sum(daily_profit) as daily_profit',
+                                                                      'userid=? and isdailynode=? and dailyflag<?',
+                                                                      [userid, 1, dailyflag]))[0].daily_profit
+            if prev_daily_rewards_sum is None:
+                prev_daily_rewards_sum = 0
+            user_all_pos_profit = (Decimal(str(prev_daily_rewards_sum)) + user_daily_profit).__round__(8)
 
             # if len(user_daily_profit_item) == 0:
             if user_daily_profit_last_item_len == 0 or user_daily_profit_last_item.pos_time != user.pos_time or user_daily_profit_last_item.dailyflag != dailyflag:
@@ -869,10 +855,10 @@ async def __daily_pos_profit_job():
                 user_injection = await DstInOutStake.findNumber('sum(`change_amount`)',
                                                                 'pos_time<=? and userid=? and isonchain=1',
                                                                 [user.pos_time, userid])
-                if user_injection < 0:
-                    user_all_pos_profit += Decimal(str(user_injection))
-                    user_injection = 0
-
+                # if user_injection < 0:
+                #     user_all_pos_profit += Decimal(str(user_injection))
+                #     user_injection = 0
+                #
                 #  daily_profit  all_pos_profilt isdailynode
                 user_daily_profit_item = DstDailyProfit(userid=userid, username=user.username,
                                                         daily_profit=user_daily_profit,

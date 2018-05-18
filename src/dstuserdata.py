@@ -9,23 +9,41 @@ from config import *
 import re
 
 
+async def get_user_deposit(userid):
+    deposit = (await DstInOutStake.findFields('sum(`change_amount`) as change_amount',
+                                              'userid=? and isonchain=? and change_amount>?',
+                                              [userid, 1, 0]))[0].change_amount
+    if deposit is None:
+        deposit = 0.0
+    return deposit
+
+
+async def get_user_withdraw(userid):
+    withdraw = (await DstInOutStake.findFields('sum(`change_amount`) as change_amount',
+                                               'userid=? and isonchain=? and change_amount<?',
+                                               [userid, 1, 0]))[0].change_amount
+    if withdraw is None:
+        withdraw = 0.0
+    return withdraw
+
+
 async def get_all_rewards_form_daily():
     pass
-    all_rewards = await DstDailyProfit.findFields('sum(daily_profit) as daily_profit', 'isdailynode=?', [1])
-    if all_rewards:
-        return all_rewards[0].daily_profit
-    else:
-        return 0
+    all_rewards = (await DstDailyProfit.findFields('sum(daily_profit) as daily_profit', 'isdailynode=?', [1]))[
+        0].daily_profit
+
+    if all_rewards is None:
+        all_rewards = 0.0
+    return all_rewards
 
 
 async def get_all_rewards_from_txs():
     pass
-    all_rewards = await DstTransactions.findFields('sum(amount) as amount', 'category=? or category=? or category=?',
-                                             ['immature', 'generate', 'sendtoself'])
-    if all_rewards:
-        return all_rewards[0].amount
-    else:
-        return 0
+    all_rewards = (await DstTransactions.findFields('sum(amount) as amount', 'category=? or category=? or category=?',
+                                                    ['immature', 'generate', 'sendtoself'])).amount
+    if all_rewards is None:
+        all_rewards = 0.0
+    return all_rewards
 
 
 async def get_user_in_out_tx(userid, count=10):
@@ -39,11 +57,10 @@ async def get_txs(limit=0, page_item_count=30):
 
 
 async def get_tx_count():
-    tx_count = await DstTransactions.findFields('count(txid) as tx_count')
-    if tx_count:
-        return tx_count[0].__getattr__('tx_count')
-    else:
-        return 0
+    tx_count = (await DstTransactions.findFields('count(txid) as txid'))[0].txid
+    if tx_count is None:
+        tx_count = 0
+    return tx_count
 
 
 async def claim_tx(userid, txid):
@@ -102,15 +119,16 @@ async def wallet_info():
 
 
 async def get_user_immature_amount(userid):
-    _immature_amount = await DstInOutStake.findFields('sum(change_amount) as change_amount',
-                                                      'userid=? and isonchain=? and isprocess=?', [userid, 1, 0])
-    if _immature_amount:
-        _immature_amount = _immature_amount[0].change_amount
-    else:
-        _immature_amount = 0
+    _immature_amount = (await DstInOutStake.findFields('sum(change_amount) as change_amount',
+                                                       'userid=? and isonchain=? and isprocess=?', [userid, 1, 0]))[
+        0].change_amount
+    # if _immature_amount:
+    #     _immature_amount = _immature_amount[0].change_amount
+    # else:
+    #     _immature_amount = 0.0
 
     if _immature_amount is None:
-        _immature_amount = 0
+        _immature_amount = 0.0
     return _immature_amount
 
 
