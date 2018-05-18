@@ -583,7 +583,7 @@ async def __total_stakes_job():
 
         prev_balance = 0
         if len(prev_tx):
-            prev_balance = Decimal(prev_tx.start_balance)
+            prev_balance = Decimal(str(prev_tx.start_balance))
             stage_pos_profit = (mature_balance - prev_balance - change_amount)
         else:
             stage_pos_profit = Decimal(0)
