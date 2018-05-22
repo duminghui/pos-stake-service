@@ -40,7 +40,8 @@ async def get_all_rewards_form_daily():
 async def get_all_rewards_from_txs():
     pass
     all_rewards = (await DstTransactions.findFields('sum(amount) as amount', 'category=? or category=? or category=?',
-                                                    ['immature', 'generate', 'sendtoself'])).amount
+                                                    [const.CATEGORY_IMMATURE, const.CATEGORY_GENERATE,
+                                                     const.CATEGORY_SENDTOSELF])).amount
     if all_rewards is None:
         all_rewards = 0.0
     return all_rewards

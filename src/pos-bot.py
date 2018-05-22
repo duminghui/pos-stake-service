@@ -234,7 +234,7 @@ async def profile(ctx, user=None):
     else:
         join_time = ''
 
-    in_out_txs = await dstuserdata.get_user_in_out_tx(_userid)
+    in_out_txs = await dstuserdata.get_user_in_out_tx(_userid, 5)
     deposit = await dstuserdata.get_user_deposit(_userid)
     withdraw = await  dstuserdata.get_user_withdraw(_userid)
     immature = await dstuserdata.get_user_immature_amount(_userid)
@@ -280,7 +280,7 @@ async def profile(ctx, user=None):
         in_out_tx = ' | '.join(
             map(lambda tx: in_out_tx_template.format(tx.change_amount, tx.txid[:10], tx.txid),
                 in_out_txs))
-        embed.add_field(name='Last 10 TX:', value=in_out_tx, inline=False)
+        embed.add_field(name='Last 5 TX:', value=in_out_tx, inline=False)
     embed.set_footer(text='Last Update:{}'.format(utils.get_gmt_time_yyyymmddhhmmss(timestamp)))
     await ctx.send(embed=embed)
 
@@ -374,12 +374,13 @@ async def walletinfo(ctx):
     if _walletinfo:
         no_owner_amount = await dstuserdata.get_no_owner_amount()
         _immature_amount = await  dstuserdata.get_immature_amount()
+        balance = float(Decimal(str(_walletinfo.balance)) + Decimal(str(_walletinfo.stake)))
         dst_template = '{:,} DST'
 
         embed.timestamp = datetime.datetime.utcfromtimestamp(_walletinfo.update_at)
         embed.add_field(name='Spendable:', value=dst_template.format(_walletinfo.balance), inline=True)
         embed.add_field(name='Stake', value=dst_template.format(_walletinfo.stake), inline=True)
-        embed.add_field(name='Total', value=dst_template.format(_walletinfo.balance + _walletinfo.stake), inline=True)
+        embed.add_field(name='Total', value=dst_template.format(balance), inline=True)
         embed.add_field(name='Immature', value=dst_template.format(_immature_amount), inline=False)
         embed.add_field(name='No Owner', value=dst_template.format(no_owner_amount), inline=False)
         embed.add_field(name='Blocks', value=_walletinfo.blocks, inline=False)

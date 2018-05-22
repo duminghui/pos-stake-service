@@ -38,3 +38,9 @@ PAGE_UP_EMOJI = '\N{Black Right-Pointing Triangle}'
 PAGE_LOCK_EMOJI = '\N{Lock}'
 
 PAGE_ITEM_COUNT = 5
+
+CATEGORY_RECEIVE = 'receive'
+CATEGORY_SEND = 'send'
+CATEGORY_SENDTOSELF = 'sendtoself'
+CATEGORY_IMMATURE = 'immature'
+CATEGORY_GENERATE = 'generate'
