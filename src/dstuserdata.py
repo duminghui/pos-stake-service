@@ -41,7 +41,7 @@ async def get_all_rewards_from_txs():
     pass
     all_rewards = (await DstTransactions.findFields('sum(amount) as amount', 'category=? or category=? or category=?',
                                                     [const.CATEGORY_IMMATURE, const.CATEGORY_GENERATE,
-                                                     const.CATEGORY_SENDTOSELF])).amount
+                                                     const.CATEGORY_SENDTOSELF]))[0].amount
     if all_rewards is None:
         all_rewards = 0.0
     return all_rewards
