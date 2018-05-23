@@ -17,24 +17,16 @@ import dstra_scan_service
 from apscheduler.triggers.interval import IntervalTrigger, datetime
 import datetime as dt
 import dstuserdata
-
-
-async def init_user():
-    await Users(id='404504209241669642', name='dumh').save()
-    await Users(id='402631387577974797', name='村长').save()
-    await Users(id='401916285929127947', name='Parker Lee').save()
-    await Users(id='396837819550662668', name='mako jr').save()
-    await Users(id='411932460344016896', name='cat lmao').save()
-    await Users(id='407552893806182411', name='lucky168').save()
-    await Users(id='403478549379678211', name='baobao').save()
-    await Users(id='403341228176965633', name='JWKY').save()
+import useraddr
 
 
 async def init(loop):
     await orm.create_pool(loop=loop, **configs.db)
+    await useraddr.init_user_addr_map()
     scheduler = AsyncIOScheduler()
     scheduler.start()
     await dstra_scan_service.start_scan(scheduler)
+
     # await dstra_scan_service.__scan_unspents()
     # dailies = await DstDailyProfit.findFields(['sum(all_pos_profit) as all_pos_profit', 'sum(injection) as injection'],
     #                                           'isdailynode=?', [1], groupBy=['profit_time_str', 'profit_time'],

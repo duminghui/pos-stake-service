@@ -11,6 +11,7 @@ from utils import get_gmt_time_yyyymmddhhmmss, get_timestamp_daily_last_second
 from itertools import groupby
 import const
 import logging
+import useraddr
 
 
 async def start_scan(scheduler):
@@ -69,6 +70,7 @@ async def __all_jobs():
     if not run_claim_tx:
         await __claim_tx()
         run_claim_tx = True
+    # return
     # await __claim_tx_test()
     await __total_stakes_job()
     await __daily_pos_profit_job()
@@ -121,79 +123,82 @@ async def __claim_tx_test():
 
 claim_txs = [
     # 12319.44493000
-    ['d1a22903ea81ffaa0dfd1ef7e3878216c662a6587e14f06ef6ae49d0a2ba5f50', '404504209241669642', 'dumh'],
+    # ['d1a22903ea81ffaa0dfd1ef7e3878216c662a6587e14f06ef6ae49d0a2ba5f50', '404504209241669642', 'dumh'],
     # 1178.57100000
-    ['56dc4454e6710aa71184b6456e7e7e0e44fb982e6a9469596289d78bd47901a1', '404504209241669642', 'dumh'],
+    # ['56dc4454e6710aa71184b6456e7e7e0e44fb982e6a9469596289d78bd47901a1', '404504209241669642', 'dumh'],
     # 15
-    ['7ec64c31b5babb6ba6911d50d8fb36cbf93791afb49e9164ea207578adbcea0e', '404504209241669642', 'dumh'],
+    # ['7ec64c31b5babb6ba6911d50d8fb36cbf93791afb49e9164ea207578adbcea0e', '404504209241669642', 'dumh'],
     # 2.00000000
-    ['4679e8a31331144ebd3bf50e80453a741eaf5c560571e103790a4b6d4488526f', '404504209241669642', 'dumh'],
+    # ['4679e8a31331144ebd3bf50e80453a741eaf5c560571e103790a4b6d4488526f', '404504209241669642', 'dumh'],
     # 10.00000000
-    ['1210c38c31b53dd6923ffe35b9a7ab9ce40cee83564d3ac5568b9771e0202fd6', '404504209241669642', 'dumh'],
+    # ['1210c38c31b53dd6923ffe35b9a7ab9ce40cee83564d3ac5568b9771e0202fd6', '404504209241669642', 'dumh'],
     # 1902.137903
-    ['ae515f8d3829f7f4632519362285e961b7825c10885771fdc0f4922b5c706bef', '404504209241669642', 'dumh'],
+    # ['ae515f8d3829f7f4632519362285e961b7825c10885771fdc0f4922b5c706bef', '404504209241669642', 'dumh'],
     # 2
-    ['69ad4f59ed1ebddf06a0a9567e1b089a6136efb568e9ed8a1b7f8bad7dde9dc4', '404504209241669642', 'dumh'],
+    # ['69ad4f59ed1ebddf06a0a9567e1b089a6136efb568e9ed8a1b7f8bad7dde9dc4', '404504209241669642', 'dumh'],
     # 1695.61
-    ['8205e4c68713aa2e1d7c84ec918357e7bf5942ed76c54002cca6d7ce3e075802', '404504209241669642', 'dumh'],
+    # ['8205e4c68713aa2e1d7c84ec918357e7bf5942ed76c54002cca6d7ce3e075802', '404504209241669642', 'dumh'],
     # ﻿1649.83
-    ['90c9584da3a64c228957277aeb7b3ff44c19df852f3149b9d27f8ca106675331', '404504209241669642', 'dumh'],
+    # ['90c9584da3a64c228957277aeb7b3ff44c19df852f3149b9d27f8ca106675331', '404504209241669642', 'dumh'],
     # -1366.5001
     ['4b6478b66ff705a26730673cb0851ce0b2401bdd116645948c9ee0fd80fce0ea', '404504209241669642', 'dumh'],
+    # 11
+    # ['f6ea8c8bc7a57ee73980c28c77cfeac4031ba6a997d28b9ea2f906ef4d394948', '404504209241669642', 'dumh'],
 
     # '10500.00000000'
-    ['73e9b4762f2167b185ade4a4b0f41e318825f4bb0cbc2b10c0a55f78b327331e', '402631387577974797', 'stevenwong2017'],
+    # ['73e9b4762f2167b185ade4a4b0f41e318825f4bb0cbc2b10c0a55f78b327331e', '402631387577974797', 'stevenwong2017'],
     # '39.00000000'
-    ['17094b0375339fe17ff6df4100bc3aba1c149d7bc16445163885799b0979f0d1', '402631387577974797', 'stevenwong2017'],
+    # ['17094b0375339fe17ff6df4100bc3aba1c149d7bc16445163885799b0979f0d1', '402631387577974797', 'stevenwong2017'],
 
     # 4333.59000000
-    ['5c0ba1ea313d5327108598d1e554a7d9c737f80809a6c5b27a6095a529420e97', '401916285929127947', 'Parker Lee'],
+    # ['5c0ba1ea313d5327108598d1e554a7d9c737f80809a6c5b27a6095a529420e97', '401916285929127947', 'Parker Lee'],
     # 15.00000000
-    ['68cdcae5f26a94c2d2ab4502740ba411b37c82263014a46716c4a0696675e019', '401916285929127947', 'Parker Lee'],
+    # ['68cdcae5f26a94c2d2ab4502740ba411b37c82263014a46716c4a0696675e019', '401916285929127947', 'Parker Lee'],
     # 431.3013
-    ['43c326304210a4a7e59a72ecb9a3bca5ad86d5b757e3c4a1d9b76fabb44851d8', '401916285929127947', 'Parker Lee'],
+    # ['43c326304210a4a7e59a72ecb9a3bca5ad86d5b757e3c4a1d9b76fabb44851d8', '401916285929127947', 'Parker Lee'],
     # ﻿1157.00
-    ['05873b907800917ab331cb9c866a75d388dfb07d11d2b3999bf1841c08de50e7', '401916285929127947', 'Parker Lee'],
+    # ['05873b907800917ab331cb9c866a75d388dfb07d11d2b3999bf1841c08de50e7', '401916285929127947', 'Parker Lee'],
     # ﻿1336.00
-    ['f00a88842f276916aba9a4c5a05a398f9c0dc2e39584a859b26e245fec769d70', '401916285929127947', 'Parker Lee'],
+    # ['f00a88842f276916aba9a4c5a05a398f9c0dc2e39584a859b26e245fec769d70', '401916285929127947', 'Parker Lee'],
     # 79.0
     ['2ad1eb01c693097cabe414b5e30f398ff5b518913c53bb1e286a91380433b1b2', '401916285929127947', 'Parker Lee'],
 
     # '7396.00000000'
-    ['41b9edb5db88d9d7b0081108e4f05b20c1fd048d0e0143f03a724df72bc3d9d8', '396837819550662668', 'mako jr'],
+    # ['41b9edb5db88d9d7b0081108e4f05b20c1fd048d0e0143f03a724df72bc3d9d8', '396837819550662668', 'mako jr'],
     # '2946.00'
-    ['6a2c17e7322f8609cb209252d134ab153a43f0126645a08282f94ba45e1b7372', '396837819550662668', 'mako jr'],
+    # ['6a2c17e7322f8609cb209252d134ab153a43f0126645a08282f94ba45e1b7372', '396837819550662668', 'mako jr'],
     # '466.6'
     ['4c1bd75846b37cbee918fad533abc0098eb8bf110d8beaf2e177ed17a1bf3167', '396837819550662668', 'mako jr'],
 
     # '7883.58000000'
-    ['e9bc6891041464c2a66531116ec90cc75a9122bb07b2f2a3a1d848ed5ca033d8', '411932460344016896', 'cat Imao'],
+    # ['e9bc6891041464c2a66531116ec90cc75a9122bb07b2f2a3a1d848ed5ca033d8', '411932460344016896', 'cat Imao'],
     # 1194.108679
-    ['c7feaeb850fdfb409a2f9246cc74a7a0c67de1d80e7801861ed6664d4118128f', '411932460344016896', 'cat Imao'],
+    # ['c7feaeb850fdfb409a2f9246cc74a7a0c67de1d80e7801861ed6664d4118128f', '411932460344016896', 'cat Imao'],
     # 281
     ['235eedd34d78dc6be288c421748aa34467c1eca23cc74db94144e3a7d9c31691', '411932460344016896', 'cat Imao'],
+    # 1670.8
 
     # '649.00000000'
-    ['9795560b3281f1151acc64596a534912f6c79248c032932204c2809f38abd751', '407552893806182411', 'lucky168'],
+    # ['9795560b3281f1151acc64596a534912f6c79248c032932204c2809f38abd751', '407552893806182411', 'lucky168'],
     # lucky168 1200.00000000
-    ['1e9eb0a9f1def2068b120b8d35b3e565ed9011a5574b39253098823bfa4050b5', '407552893806182411', 'lucky168'],
+    # ['1e9eb0a9f1def2068b120b8d35b3e565ed9011a5574b39253098823bfa4050b5', '407552893806182411', 'lucky168'],
     # 326.2
     ['63e6f6494ce036bbbbfd7361dee335dab39341f8cc683fae2a93c9e297955022', '407552893806182411', 'lucky168'],
 
     # '649.00000000'
-    ['56883f7dd4325c5c54e200e62ea6b5a79ff41319a81a15fb65ca5d303475e679', '403478549379678211', 'baobao'],
+    # ['56883f7dd4325c5c54e200e62ea6b5a79ff41319a81a15fb65ca5d303475e679', '403478549379678211', 'baobao'],
     # baobao 2000.00000000
-    ['77882a1d20a342dbd714ee0f4fd4764fc915ebbc2c1edaaa2d2b22908ce86c15', '403478549379678211', 'baobao'],
-    # baobao -2880 ﻿
-    ['5af46fe0d6602074f6b960851a4b54351fa076651d7a96ad0b014e77bf342018', '403478549379678211', 'baobao'],
+    # ['77882a1d20a342dbd714ee0f4fd4764fc915ebbc2c1edaaa2d2b22908ce86c15', '403478549379678211', 'baobao'],
+    # baobao -2880.0001
+    # ['5af46fe0d6602074f6b960851a4b54351fa076651d7a96ad0b014e77bf342018', '403478549379678211', 'baobao'],
     # 213.64
     ['42624cc45d5599c9dc79d315d90f458666e55c0d4cd5fcdc1f33de1dbb576ec3', '403478549379678211', 'baobao'],
 
     # JWKY '1000.00000000'
-    ['b47aae02d249fe4308e70c3a41ab787c7cc49f821e5e619fadbdf4c6dd0c06e7', '403341228176965633', 'JWKY'],
+    # ['b47aae02d249fe4308e70c3a41ab787c7cc49f821e5e619fadbdf4c6dd0c06e7', '403341228176965633', 'JWKY'],
 
     # Ray '8363.6129351'
-    ['6494c6df7c2b975c2a59973b16397de0a0f173bedaf26669ce71ffaf3f79029c', '385061500034875392', 'Ray'],
+    # ['6494c6df7c2b975c2a59973b16397de0a0f173bedaf26669ce71ffaf3f79029c', '385061500034875392', 'Ray'],
 ]
 
 
@@ -406,6 +411,7 @@ async def __scan_transactions_job2():
         else:
             pos_time = txtime + const.POS_EFFECTIVE_TIME
         await DstInOutStake(change_amount=last_chain_tx.amount, txid=last_chain_tx.txid,
+                            userid='404504209241669642', username='dumh',
                             txtime=txtime,
                             txtime_str=get_gmt_time_yyyymmddhhmmss(txtime),
                             pos_time=pos_time,
@@ -486,7 +492,7 @@ async def __scan_transactions_job2():
             # elif tx.txid in const.POS_RECEIVE_2_GENERATE:
             #     last_db_tx.category = const.CATEGORY_GENERATE
             else:
-                category, tx_amount = __analyze_tx(tx.txid)
+                category, tx_amount, userid, username = __analyze_tx(tx.txid)
                 last_db_tx.amount = tx_amount
                 last_db_tx.category = category
                 if category == const.CATEGORY_SEND or category == const.CATEGORY_RECEIVE:
@@ -499,7 +505,7 @@ async def __scan_transactions_job2():
                     else:
                         pos_time = txtime
                         comment = 'withdraw coin'
-                    await DstInOutStake(change_amount=tx_amount, txid=tx_id,
+                    await DstInOutStake(change_amount=tx_amount, txid=tx_id, userid=userid, username=username,
                                         txtime=txtime,
                                         txtime_str=get_gmt_time_yyyymmddhhmmss(txtime),
                                         pos_time=pos_time,
@@ -544,21 +550,28 @@ async def __scan_transactions_job2():
 # 返回 category,amount
 def __analyze_tx(txid):
     tx_org = dstracmd.gettransaction(txid)
+    # 这个变量只在发给自己或发出去的时候有用
     vin_sum_amount = Decimal("0")
     vin_address_is_all_airdrop = True
+    vin_addresses = []
     for vin in tx_org.vin:
         vin_txid = vin['txid']
         vin_vout = vin['vout']
         tx_vin = dstracmd.gettransaction(vin_txid)
         tx_vin_vout = tx_vin.vout[vin_vout]
+        vin_address = tx_vin_vout['scriptPubKey']['addresses'][0]
+        vin_addresses.append(vin_address)
         vin_address_is_all_airdrop = vin_address_is_all_airdrop and (
-                tx_vin_vout['scriptPubKey']['addresses'][0] == const.POS_ADDRESS)
+                vin_address == const.POS_ADDRESS)
         vin_sum_amount += Decimal(str(tx_vin_vout['value']))
 
     vout_sum_amount = Decimal("0")
     vout_address_is_all_airdrop = True
+    vout_addresses = []
     for vout in tx_org.vout:
-        is_airdrop_address = const.POS_ADDRESS == vout['scriptPubKey']['addresses'][0]
+        vout_address = vout['scriptPubKey']['addresses'][0]
+        vout_addresses.append(vout_address)
+        is_airdrop_address = const.POS_ADDRESS == vout_address
         vout_address_is_all_airdrop = vout_address_is_all_airdrop and is_airdrop_address
         if is_airdrop_address:
             vout_sum_amount += Decimal(str(vout['value']))
@@ -566,11 +579,25 @@ def __analyze_tx(txid):
     if vin_address_is_all_airdrop:
         amount = float(vout_sum_amount - vin_sum_amount)
         if vout_address_is_all_airdrop:
-            return const.CATEGORY_SENDTOSELF, amount
+            return const.CATEGORY_SENDTOSELF, amount, '', ''
         else:
-            return const.CATEGORY_SEND, amount
+            userid, username = __get_userid_username(vout_addresses)
+            return const.CATEGORY_SEND, amount, userid, username
     else:
-        return const.CATEGORY_RECEIVE, float(vout_sum_amount)
+        userid, username = __get_userid_username(vin_addresses)
+        return const.CATEGORY_RECEIVE, float(vout_sum_amount), userid, username
+
+
+def __get_userid_username(addresses):
+    userid = const.POS_NOUSER_ID
+    username = const.POS_NOUSER_NAME
+    for address in addresses:
+        _user_addr = useraddr.get(address)
+        if _user_addr is not None:
+            userid = _user_addr.userid
+            username = _user_addr.username
+            break
+    return userid, username
 
 
 async def __total_stakes_job():

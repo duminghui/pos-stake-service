@@ -48,6 +48,13 @@ class Users(Model):
     create_at_time = StringField(ddl='varchar(50)', default=utils.get_gmt_time_yyyymmddhhmmss)
 
 
+class DstUserAddr(Model):
+    __table__ = 'dst_user_addr'
+    addr = StringField(primary_key=True, ddl='varchar(50)')
+    userid = StringField(ddl='varchar(50)')
+    username = StringField(ddl='varchar(50)')
+
+
 class DstInOutStake(Model):
     __table__ = 'dst_in_out_stake'
     id = StringField(ddl='varchar(50)', primary_key=True, default=next_id)
