@@ -175,7 +175,7 @@ claim_txs = [
     # 1194.108679
     # ['c7feaeb850fdfb409a2f9246cc74a7a0c67de1d80e7801861ed6664d4118128f', '411932460344016896', 'cat Imao'],
     # 281
-    ['235eedd34d78dc6be288c421748aa34467c1eca23cc74db94144e3a7d9c31691', '411932460344016896', 'cat Imao'],
+    ['235eedd34d78dc6be288c421748aa34467c1eca23cc74db94144e3a7d9c31691', '411932460344016896', 'cat lmao'],
     # 1670.8
 
     # '649.00000000'
@@ -599,7 +599,6 @@ def __get_userid_username(addresses):
             break
     return userid, username
 
-
 async def __total_stakes_job():
     '''
         股份计算job
@@ -691,7 +690,7 @@ async def __total_stakes_job():
 
         # 获取本次处理交易时间段时钱包的收入---------
 
-        logging.info('---------------------------------------------------------')
+        logging.info('-----------------------------------------------------------------')
         logging.info('###当前钱包数据:钱包币数:%s, 未成熟币数:%s, 前一条钱包数:%s ,能使用的分配总币数:%s, 本次股份分配收益:%s', wallet_balance,
                      immature_amount, prev_balance, mature_balance, stage_pos_profit)
 
@@ -704,7 +703,6 @@ async def __total_stakes_job():
         # 删除已经处理的用户,留下未处理的用户
         for user in wait_process_users:
             wait_process_users_1.remove(user)
-
         if len(wait_process_users_1) == 0:
             random_index = random.randint(0, len(wait_process_users) - 1)
             fix_user = wait_process_users[random_index]
@@ -720,7 +718,11 @@ async def __total_stakes_job():
         user_count = len(wait_process_users)
         processed_sum_stake = Decimal(0).__round__(const.PREC_STAKE)
         processed_sum_pos_profit = Decimal(0).__round__(const.PREC_BALANCE)
+        logging.info("############################:current:{}, fix user:{}, user_count:{}".format(current_tx_username,
+                                                                                                  fix_user[1],
+                                                                                                  user_count))
         for userid, username in wait_process_users:
+            logging.info("############################:当前待处理用户:|{}|".format(username))
             user_index += 1
             # 获取该用户前二条股份的数据,如果其他用户第一条数据的pos_time和主链上的一样, 则不处理.
             prev_stake_tx = await DstInOutStake.findAll('`pos_time`<=? and `userid`=?', [pos_time, userid],
@@ -769,7 +771,7 @@ async def __total_stakes_job():
                 # 计算用户在这条记录上所占的股份比
                 comment_template = '{} coin{}'
                 if user_index == user_count:
-                    new_stake = Decimal(1) - processed_sum_stake
+                    new_stake = Decimal('1') - processed_sum_stake
                     fix_stake = new_stake - (new_start_amount / mature_balance).__round__(const.PREC_STAKE)
                     comment = comment_template.format(comment_flag,
                                                       ', fix stake:{}, fix amount:{}'.format(fix_stake, fix_amount))
@@ -779,7 +781,8 @@ async def __total_stakes_job():
                     fix_stake = 0
                     comment = comment_flag.format(comment_flag, '')
                 logging.info(
-                    'c[%s]新股份记录:开始数据:%s, 股份:%s, PoS利息:%s' % (username, new_start_amount, new_stake, pos_profit))
+                    'c[%s]新股份记录:开始数据:%s, 股份:%s, PoS利息:%s' % (
+                        username, new_start_amount, new_stake, pos_profit))
                 tx.stake = new_stake
                 tx.start_amount = new_start_amount
                 tx.pos_profit = pos_profit
@@ -797,7 +800,7 @@ async def __total_stakes_job():
                 new_start_amount = prev_start_amount + pos_profit
                 comment_template = 'other {} coin{}'
                 if user_index == user_count:
-                    new_stake = Decimal(1) - processed_sum_stake
+                    new_stake = Decimal('1') - processed_sum_stake
                     fix_stake = new_stake - (new_start_amount / mature_balance).__round__(const.PREC_STAKE)
                     comment = comment_template.format(comment_flag,
                                                       ', fix stake:{}, fix amount:{}'.format(fix_stake, fix_amount))

@@ -79,7 +79,6 @@ INSERT INTO `dst_user_addr` (`addr`,`userid`,`username`) VALUES('FFgiXPCVH47Kwjq
 -- 11
 INSERT INTO `dst_user_addr` (`addr`,`userid`,`username`) VALUES('FJaCXYHBd9gnWX4ZKvBmUWPqJatqD1X9aX','404504209241669642','dumh');
 
-
 -- 10500
 INSERT INTO `dst_user_addr` (`addr`,`userid`,`username`) VALUES('FB1uuSzdh5mscz8KwzgFSN4TAe6rhz2xj2','402631387577974797','stevenwong2017');
 -- 39
