@@ -265,7 +265,7 @@ def __get_index_count_by_txid(txid=''):
     start_txid = ''
     while True:
 
-        # 检查在处理过程中链是否有变化,如果有,再重新计算.
+        # 检查在处理过程中链是否有变化,如果有,重新计算.
         txs = dstracmd.listtransactions(1, 0)
         if len(txs) == 0:
             return -1, 0

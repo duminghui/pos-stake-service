@@ -227,12 +227,12 @@ async def profile(ctx, user=None):
         return
     _userid = _user.id
     _username = _user.name
-    _daily_profit = await dstuserdata.user_dailies(_userid, 0, 1)
+    _daily_profit = await dstuserdata.user_dailies(_userid, 0, 6)
     user_first_stake = await dstuserdata.user_first_stake(_userid)
-    if user_first_stake:
-        join_time = user_first_stake.txtime_str
-    else:
-        join_time = ''
+    # if user_first_stake:
+    #     join_time = user_first_stake.txtime_str
+    # else:
+    #     join_time = ''
 
     in_out_txs = await dstuserdata.get_user_in_out_tx(_userid, 5)
     deposit = await dstuserdata.get_user_deposit(_userid)
@@ -273,12 +273,16 @@ async def profile(ctx, user=None):
     embed.add_field(name='Immature:', value=dst_template.format(immature), inline=True)
     embed.add_field(name='Stake:(does not include immature)', value='{:}% ({})'.format(stake * 100, stake_time),
                     inline=False)
-    if join_time != '':
-        embed.add_field(name="Join time:", value=join_time, inline=False)
+    # if join_time != '':
+    #     embed.add_field(name="Join time:", value=join_time, inline=False)
+    if len(_daily_profit) > 0:
+        daily_reward_template = '{:.8f} DST'
+        daily_rewards = ' | '.join(map(lambda tx: daily_reward_template.format(tx.daily_profit), _daily_profit[1:]))
+        embed.add_field(name="Last 5 Rewards:", value=daily_rewards, inline=False)
     if len(in_out_txs) > 0:
-        in_out_tx_template = '({:,} DST) [{}](https://blocks.dstra.io/tx/{})'
+        in_out_tx_template = '[{:,} DST](https://blocks.dstra.io/tx/{})'
         in_out_tx = ' | '.join(
-            map(lambda tx: in_out_tx_template.format(tx.change_amount, tx.txid[:10], tx.txid),
+            map(lambda tx: in_out_tx_template.format(tx.change_amount, tx.txid),
                 in_out_txs))
         embed.add_field(name='Last 5 TX:', value=in_out_tx, inline=False)
     embed.set_footer(text='Last Update:{}'.format(utils.get_gmt_time_yyyymmddhhmmss(timestamp)))

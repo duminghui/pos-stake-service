@@ -38,7 +38,6 @@ CREATE TABLE dst_transactions (
 CREATE TABLE users (
   `id`              VARCHAR(50)   NOT NULL,
   `name`            VARCHAR(50)   NOT NULL,
-  `dst_addr`        VARCHAR(50)   NOT NULL,
   `create_at`       REAL          NOT NULL,
   `create_at_time`  VARCHAR(50)   NOT NULL,
   PRIMARY KEY (`id`)
@@ -78,6 +77,8 @@ INSERT INTO `dst_user_addr` (`addr`,`userid`,`username`) VALUES('FFgiXPCVH47Kwjq
 -- INSERT INTO `dst_user_addr` (`addr`,`userid`,`username`) VALUES('FCd1oY8aMH2daf8YvBnSfiFafunj85RZfT','404504209241669642','dumh');
 -- 11
 INSERT INTO `dst_user_addr` (`addr`,`userid`,`username`) VALUES('FJaCXYHBd9gnWX4ZKvBmUWPqJatqD1X9aX','404504209241669642','dumh');
+-- -3.5
+INSERT INTO `dst_user_addr` (`addr`,`userid`,`username`) VALUES('FNMHrHqz3D5BrZLGMZ8KFDsBiaHgX2QWUC','404504209241669642','dumh');
 
 -- 10500
 INSERT INTO `dst_user_addr` (`addr`,`userid`,`username`) VALUES('FB1uuSzdh5mscz8KwzgFSN4TAe6rhz2xj2','402631387577974797','stevenwong2017');
