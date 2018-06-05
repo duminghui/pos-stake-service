@@ -54,6 +54,7 @@ INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('40755289
 INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('403478549379678211','baobao',0,'1970-1-1 00:00:00');
 INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('403341228176965633','JWKY',0,'1970-1-1 00:00:00');
 INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('385061500034875392','RAY',0,'1970-1-1 00:00:00');
+INSERT INTO `users` (`id`,`name`,`create_at`,`create_at_time`) VALUES ('430188363493146635','Micheal yang',0,'1970-1-1 00:00:00');
 
 CREATE TABLE dst_user_addr(
     `addr`              VARCHAR(50)   NOT NULL,
@@ -99,7 +100,7 @@ INSERT INTO `dst_user_addr` (`addr`,`userid`,`username`) VALUES('F8BcxZresqYT3pA
 
 INSERT INTO `dst_user_addr` (`addr`,`userid`,`username`) VALUES('FTddbJCfWY6h5VfgZ1yzjbVCXhMuq5kx6X','385061500034875392','RAY');
 
-
+INSERT INTO `dst_user_addr` (`addr`,`userid`,`username`) VALUES('FTBgt5Qf6rpZZz5o6CP3YMPkyNA5i1JCYe','430188363493146635','Micheal yang');
 
 
 CREATE TABLE dst_in_out_stake (
