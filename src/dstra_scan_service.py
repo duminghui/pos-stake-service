@@ -160,21 +160,21 @@ claim_txs = [
     # ['05873b907800917ab331cb9c866a75d388dfb07d11d2b3999bf1841c08de50e7', '401916285929127947', 'Parker Lee'],
     # ﻿1336.00
     # ['f00a88842f276916aba9a4c5a05a398f9c0dc2e39584a859b26e245fec769d70', '401916285929127947', 'Parker Lee'],
-    # 79.0
+    # 79.0- 补的
     ['2ad1eb01c693097cabe414b5e30f398ff5b518913c53bb1e286a91380433b1b2', '401916285929127947', 'Parker Lee'],
 
     # '7396.00000000'
     # ['41b9edb5db88d9d7b0081108e4f05b20c1fd048d0e0143f03a724df72bc3d9d8', '396837819550662668', 'mako jr'],
     # '2946.00'
     # ['6a2c17e7322f8609cb209252d134ab153a43f0126645a08282f94ba45e1b7372', '396837819550662668', 'mako jr'],
-    # '466.6'
+    # '466.6' --补的
     ['4c1bd75846b37cbee918fad533abc0098eb8bf110d8beaf2e177ed17a1bf3167', '396837819550662668', 'mako jr'],
 
     # '7883.58000000'
     # ['e9bc6891041464c2a66531116ec90cc75a9122bb07b2f2a3a1d848ed5ca033d8', '411932460344016896', 'cat Imao'],
     # 1194.108679
     # ['c7feaeb850fdfb409a2f9246cc74a7a0c67de1d80e7801861ed6664d4118128f', '411932460344016896', 'cat Imao'],
-    # 281
+    # 281 --补的
     ['235eedd34d78dc6be288c421748aa34467c1eca23cc74db94144e3a7d9c31691', '411932460344016896', 'cat lmao'],
     # 1670.8
 
@@ -182,7 +182,7 @@ claim_txs = [
     # ['9795560b3281f1151acc64596a534912f6c79248c032932204c2809f38abd751', '407552893806182411', 'lucky168'],
     # lucky168 1200.00000000
     # ['1e9eb0a9f1def2068b120b8d35b3e565ed9011a5574b39253098823bfa4050b5', '407552893806182411', 'lucky168'],
-    # 326.2
+    # 326.2 --补的
     ['63e6f6494ce036bbbbfd7361dee335dab39341f8cc683fae2a93c9e297955022', '407552893806182411', 'lucky168'],
 
     # '649.00000000'
@@ -191,7 +191,7 @@ claim_txs = [
     # ['77882a1d20a342dbd714ee0f4fd4764fc915ebbc2c1edaaa2d2b22908ce86c15', '403478549379678211', 'baobao'],
     # baobao -2880.0001
     # ['5af46fe0d6602074f6b960851a4b54351fa076651d7a96ad0b014e77bf342018', '403478549379678211', 'baobao'],
-    # 213.64
+    # 213.64 --补的
     ['42624cc45d5599c9dc79d315d90f458666e55c0d4cd5fcdc1f33de1dbb576ec3', '403478549379678211', 'baobao'],
 
     # JWKY '1000.00000000'
@@ -482,13 +482,18 @@ async def __scan_transactions_job2():
             idx = count - (start_index + txs_count) + index
             txtime = tx.blocktime
             # 修正两个txtime一样引起的算占比时的错误
+            logging.info("###############################:{},{}".format(txtime, last_db_tx.txtime))
             if txtime == last_db_tx.txtime:
                 txtime += 1
+            elif txtime + 1 == last_db_tx.txtime:
+                txtime += 2
+
             last_db_tx = DstTransactions(txid=tx_id, idx=idx, category=tx.category, amount=tx.amount, txtime=txtime,
                                          txtime_str=get_gmt_time_yyyymmddhhmmss(txtime))
             if tx.category == const.CATEGORY_GENERATE or tx.category == const.CATEGORY_IMMATURE:
+                pass
                 # await tx_db.save()
-                await __process_staking_info(tx_id)
+                # await __process_staking_info(tx_id)
             # elif tx.txid in const.POS_RECEIVE_2_GENERATE:
             #     last_db_tx.category = const.CATEGORY_GENERATE
             else:
@@ -598,6 +603,7 @@ def __get_userid_username(addresses):
             username = _user_addr.username
             break
     return userid, username
+
 
 async def __total_stakes_job():
     '''
@@ -722,7 +728,7 @@ async def __total_stakes_job():
                                                                                                   fix_user[1],
                                                                                                   user_count))
         for userid, username in wait_process_users:
-            logging.info("############################:当前待处理用户:|{}|".format(username))
+            logging.info("############################:当前待处理用户:|{}|,[{}]".format(username, userid))
             user_index += 1
             # 获取该用户前二条股份的数据,如果其他用户第一条数据的pos_time和主链上的一样, 则不处理.
             prev_stake_tx = await DstInOutStake.findAll('`pos_time`<=? and `userid`=?', [pos_time, userid],
