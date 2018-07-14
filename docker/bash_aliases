@@ -1,0 +1,14 @@
+if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+    . /etc/bash_completion
+fi
+
+export PS1='\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\u@\h:[\w]\n\$ '
+alias ll='ls -alFh'
+alias dst=/root/dstrad
+alias traw=/root/trawd
+alias proxy_on='export http_proxy=http://host.docker.internal:1087;export https_proxy=$http_proxy'
+alias proxy_off='unset http_proxy;unset https_proxy'
+alias go_dep='go get -v github.com/golang/dep/cmd/dep'
+alias go_vg='go get -v github.com/GetStream/vg && command -v vg >/dev/null 2>&1 && eval "$(vg eval --shell bash)"'
+
+command -v vg >/dev/null 2>&1 && eval "$(vg eval --shell bash)"

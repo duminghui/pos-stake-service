@@ -5,7 +5,6 @@ services:
         image: pos-service
         build:
             context: .
-            target: tmp
         container_name: pos-service
         hostname: pos-service
         volumes:
